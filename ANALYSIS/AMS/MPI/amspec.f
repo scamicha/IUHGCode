@@ -12,7 +12,7 @@
       INTEGER,PARAMETER :: size = ((finish-start)/skip)+1
       INTEGER,PARAMETER :: jstart = 90
 
-      INTEGER :: jmax2,kmax2,mmax
+      INTEGER :: jmax2,kmax2,mmax,amcount,process
       INTEGER :: count,j,k,l,m,i
       INTEGER :: numranks,mpierr,myrank
       REAL(DOUBLE),PARAMETER :: tconv = 1605.63
@@ -58,28 +58,57 @@
 
          count = 0
          write(filenum,'(I6.6)')start
-         rhofile
-         DO i=start,finish,skip
-            WRITE(filenum,'(I6.6)')i
-            rhofile = indir//"rho3d."//filenum
-         
-         INQUIRE(FILE=rhofile,EXIST=EXISTSTAT)
-         
-         IF(.not.EXISTSTAT) THEN
-            print*,"file ",rhofile, "does not exist"
-            CYCLE
-         ENDIF
-         
-!         print*," AMS OUT -> OPENING FILE: ", rhofile
-         OPEN(UNIT=12,FILE=rhofile,FORM="UNFORMATTED")
+         rhofile=trim(indir)//'rho3d.'//filenum
+         OPEN(UNIT=12,FILE=trim(rhofile),FORM='UNFORMATTED')
 
          READ(12) rho
          READ(12) time
          CLOSE(12)
-         
-!         print*,' AMS OUT -> READ FILE: ',rhofile
+
          count = count+1
          timearr(count) = time/tconv
+
+         DO i=start,finish,skip
+
+            AMCOUNT = 1
+            
+            CALL MPI_BCAST(RHO,JMAX2*KMAX2*LMAX,MPI_DOUBLE_PRECISION,&
+                 0,MPI_COMM_WORLD,mpierr)
+
+            DO PROCESS=1,min(numranks-1,mmax)
+               CALL MPI_SEND(AMCOUNT,1,MPI_INTEGER,PROCESS,AMCOUNT,&
+                    MPI_COMM_WORLD,mpierr)
+               AMCOUNT = AMCOUNT+1
+            ENDDO
+
+911         CONTINUE
+
+            IF(I.lt.IEND) THEN
+               WRITE(filenum,'(I6.6)')i
+               rhofile = indir//"rho3d."//filenum
+         
+               INQUIRE(FILE=rhofile,EXIST=EXISTSTAT)
+         
+               IF(.not.EXISTSTAT) THEN
+                  print*,"file ",rhofile, "does not exist"
+                  I = I+1
+                  GO TO 911
+               ENDIF
+         
+!         print*," AMS OUT -> OPENING FILE: ", rhofile
+               OPEN(UNIT=12,FILE=rhofile,FORM="UNFORMATTED")
+
+               READ(12) rho
+               READ(12) time
+               CLOSE(12)
+         
+!         print*,' AMS OUT -> READ FILE: ',rhofile
+               count = count+1
+               timearr(count) = time/tconv
+            ENDIF
+
+            DO PROCESS=1,MMAX+1
+               call MPI_RECV(
          
 
 !$OMP PARALLEL DO DEFAULT(SHARED) 
