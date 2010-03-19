@@ -1,0 +1,11 @@
+decompose will generate data for all time steps included in the range 
+specified in hydroparam.h.You can then use torquemode.pro to plot whatever 
+range you are interested. Generally it's a good idea to run decompose 
+over the entire asymtotic phase and then go back and plot what you're 
+interested in. torquecombined.pro plots data from more than one run for 
+comparison purposes. The .pro files can be found in the IDL folder. Other
+things to watch for are making sure that the data path and output path
+are set correctly and the the endian is set properly in the Makefile. 
+There are several makefiles included, to use a different compiler copy 
+the one you'd like to use to Makefile. Jobs can be submitted using the 
+dcomp.sub script which is valid for the PBS scheduler.

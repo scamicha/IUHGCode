@@ -1,0 +1,12 @@
+#A sample job submission script using PBS on Quarry at IU
+#be sure to set nodes and ppn to match the OMP_NUM_THREADS set
+#in launch.sh. Also make sure you are running out of the correct
+#directory. -N sets the name of the run.
+
+#PBS -l nodes=6:ppn=1,walltime=30:00
+#PBS -N phalf_MPI
+#PBS -q batch
+#PBS -j oe
+set NP=`wc -l $PBS_NODEFILE | awk '{print $1}'` 
+cd $HOME/INITCOND/G1.6TC2P.5L128/MODEDECOMPOSE_MPI/
+mpirun -machinefile $PBS_NODEFILE -np $NP ./launch.sh
