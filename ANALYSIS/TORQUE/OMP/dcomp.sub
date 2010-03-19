@@ -1,0 +1,7 @@
+#PBS -l nodes=1:ppn=1,walltime=30:00
+#PBS -j oe
+#PBS -N dcomptest
+#PBS -q debug
+setenv OMP_NUM_THREADS 8
+cd $HOME/INITCOND/G1.6TC2LOW/MODEDECOMPOSE/
+./decompose > quarrytest.out

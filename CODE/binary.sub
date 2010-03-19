@@ -1,0 +1,36 @@
+#!/bin/tcsh
+#PBS -o /bessemer/smichael/BINARY20JUP2AUT0DATA/
+#PBS -l ncpus=128
+#PBS -l mem=256gb
+#PBS -l walltime=48:00:00
+#PBS -M scamicha@indiana.edu
+#PBS -m abe
+#PBS -N binary-mp128
+#PBS -q batch
+set echo
+ja
+cd $SCRATCH/BINARY20JUP2AUT0DATA/
+cp $HOME/BINARY20JUP2AUT0/chymera-omp .
+cp $HOME/BINARY20JUP2AUT0/fort.5 .
+#cp $HOME/BINARY20JUP2AUT0/fort.7 .
+cp $HOME/BINARY20JUP2AUT0/*.dat .
+#cp $HOME/BINARY20JUP2AUT0/filter.txt .
+
+source /usr/share/modules/init/csh
+source /etc/csh.cshrc.psc
+#module swap icc/10.1.015 icc/10.1.008
+#module swap ifort/10.1.015 ifort/10.1.008
+#module load histx
+
+setenv OMP_NUM_THREADS 128
+setenv KMP_STACKSIZE 2g
+setenv KMP_LIBRARY turnaround
+limit stacksize unlimited
+#setenv VT_BUFFER_SIZE 100M
+#setenv VT_MAX_FLUSHES 0
+#setenv VT_FILTER_SPEC filter.txt
+setenv PATH $HOME/bin:$PATH
+setenv LD_LIBRARY_PATH $HOME/lib:$HOME/lib/lib/:$LD_LIBRARY_PATH
+dplace -x2 -r lb ./chymera-omp > binary_1320k.out
+ 
+ja -chlst

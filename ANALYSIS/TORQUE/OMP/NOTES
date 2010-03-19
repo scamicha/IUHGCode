@@ -1,0 +1,6 @@
+decompose will generate data for all time steps included in the range 
+specified in dcomp.f. You can then use torquemode.pro to plot whatever 
+range you are interested. Generally it's a good idea to run decompose 
+over the entire asymtotic phase and then go back and plot what you're 
+interested in. torquecombined.pro plots data from more than one run for 
+comparison purposes.
