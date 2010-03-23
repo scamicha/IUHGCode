@@ -13,8 +13,9 @@
       INTEGER,PARAMETER :: jstart = 90
 
       INTEGER :: jmax2,kmax2,mmax,amcount,process
-      INTEGER :: count,j,k,l,m,i
+      INTEGER :: count,j,k,l,m,i,m_return,sender
       INTEGER :: numranks,mpierr,myrank
+      INTEGER :: status(MPI_STATUS_SIZE)
       REAL(DOUBLE),PARAMETER :: tconv = 1605.63
       REAL(DOUBLE),PARAMETER :: pi = 3.14159265358979323846d0
       REAL(DOUBLE),PARAMETER :: twopi = 2.d0*pi
@@ -28,6 +29,13 @@
       LOGICAL EXISTSTAT
       CHARACTER outfile*80,indir*80
       CHARACTER rhofile*80,amfile*80,filenum*8,str*80
+
+      type answer_return
+         sequence
+         REAL(DOUBLE) :: a, amid
+      end type answer_return
+
+      type (answer_return) answer
 
       outfile = "indiram15AU.dat"
       indir = "../WAN_RHO/"
@@ -108,8 +116,26 @@
             ENDIF
 
             DO PROCESS=1,MMAX+1
-               call MPI_RECV(
-         
+               call MPI_RECV(answer,2,MPI_DOUBLE_PRECISION,&
+                    MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,status,&
+                    mpierr)
+               
+               sender = status(MPI_SOURCE)
+               m_return = status(MPI_TAG)
+
+               avga(m_return,count) = answer%a
+               avgamid(m_return,count) = answer%amid
+               
+               IF(AMCOUNT.lt.MMAX) THEN
+                  call MPI_SEND(AMCOUNT,1,MPI_INTEGER,sender,AMCOUNT,&
+                       MPI_COMM_WORLD,mpierr)
+                  AMCOUNT = AMCOUNT+1
+               ELSE
+                  call MPI_SEND(MPI_BOTTOM,0,MPI_INTEGER,sender,MMAX+1,&
+                       MPI_COMM_WORLD,mpierr)
+               ENDIF
+            ENDDO
+         ENDDO
 
 !$OMP PARALLEL DO DEFAULT(SHARED) 
 !$OMP&PRIVATE(am,bm,a0,avgaslice,ambmslice,phi,j,k,l)
