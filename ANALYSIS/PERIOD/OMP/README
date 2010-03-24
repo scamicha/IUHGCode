@@ -1,0 +1,16 @@
+The set of programs periodogram.pro,globalinclude.f,globalwrapper.c replace
+the functionality of the analyzer.f program. To begin,check the file
+globalinclude.f to make sure that the parameters are correct. The relevant
+parameters are PISYM and JMIN. PISYM determines whether or not the model is pi
+symmetric and JMIN is the minimum radius at which the amplitudes are
+calculated. Next, make the sharable objects by typing "make" at the command
+line. The makefile uses the gcc and portland group compilers. You can change
+these if you don't have one or the other, be aware that the necessary flags
+will probably change. After making the objects, edit the file
+periodogram.pro. Most of the values that need to be changed are in the top
+section. Set JMAX, KMAX, and LMAX as well as STEPBEGIN, STEPEND and
+STEPSKIP. JREQ and AUJREQ are used to set the radius scale for real
+units. JTOP is the radius out to which amplitudes are calculated. MINDT should
+be about 10 times the delt of a single step. TORP is the number of PTUs in a
+ORP. DR is Rof3N. If RHOSWITCH is set to 1 the program will use rho files to
+construct the amplitudes, otherwise will use the COEFFILE that you specify. 
