@@ -20,9 +20,9 @@
       REAL(DOUBLE),PARAMETER :: pi = 3.14159265358979323846d0
       REAL(DOUBLE),PARAMETER :: twopi = 2.d0*pi
       REAL(DOUBLE),DIMENSION(:,:,:),ALLOCATABLE    :: rho
-      REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm,ambmslice
-      REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: a0tot,a0mid,a0
-      REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice
+      REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm
+      REAL(DOUBLE)           :: a0tot
+      REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice,a0slice
       REAL(DOUBLE),DIMENSION(:,:) :: avga,avgamid
       REAL(DOUBLE),DIMENSION(size) :: timearr
       REAL(DOUBLE) :: time,phi,dphi
@@ -50,15 +50,11 @@
       dphi  = twopi/lmax
 
       ALLOCATE(rho(jmax2,kmax2,lmax))
-      ALLOCATE(a0tot(mmax,size))
-      ALLOCATE(a0mid(mmax,size))
-
+ 
       avga(:,:)          = 0.d0
       avgamid(:,:)       = 0.d0
       timearr(:)         = 0.d0
-      a0tot(:,:)         = 0.d0
-      a0mid(:,:)         = 0.d0
-
+ 
       IF(myrank.eq.0) THEN
 
          ALLOCATE(avga(LMAX/2,size))
@@ -137,60 +133,102 @@
             ENDDO
          ENDDO
 
-!$OMP PARALLEL DO DEFAULT(SHARED) 
-!$OMP&PRIVATE(am,bm,a0,avgaslice,ambmslice,phi,j,k,l)
+      ELSE
+         do I=start,finish,skip
+            CALL MPI_BCAST(RHO,JMAX2*KMAX2*LMAX,MPI_DOUBLE_PRECISION,&
+                 0,MPI_COMM_WORLD,mpierr)
+            IF (myrank.lt.mmax) THEN
 
-         DO m=1,MMAX
-            ALLOCATE(a0(jmax2,kmax2))
-            ALLOCATE(am(jmax2,kmax2))
-            ALLOCATE(bm(jmax2,kmax2))
-            ALLOCATE(ambmslice(jmax2,kmax2))
-            ALLOCATE(avgaslice(kmax2))
-            am(:,:)        = 0.d0
-            bm(:,:)        = 0.d0
-            a0(:,:)        = 0.d0
-            avgaslice(:)   = 0.d0
-            ambmslice(:,:) = 0.d0
-            DO k=2,kmax+1
-               DO j=jstart,jmax+1
-                  DO l=1,lmax
-                     phi = twopi*dble(l)/dble(lmax)        
-                     am(j,k) = am(j,k)+rho(j,k,l)*
-     &                    cos(m*phi)
-                     bm(j,k) = bm(j,k)+rho(j,k,l)*
-     &                    sin(m*phi)
-                     a0(j,k) = a0(j,k)+rho(j,k,l)
+300            CALL MPI_RECV(AMCOUNT,1,MPI_INTEGER,0,MPI_ANY_TAG,&
+                    MPI_COMM_WORLD,status,mpierr)
+               
+               IF (status(MPI_TAG).eq.MMAX+1) go to 400
+
+               ALLOCATE(a0(jmax2,kmax2))
+               ALLOCATE(am(jmax2,kmax2))
+               ALLOCATE(bm(jmax2,kmax2))
+               ALLOCATE(avgaslice(kmax2))
+               ALLOCATE(a0slice(kmax2))
+               am(:,:)        = 0.d0
+               bm(:,:)        = 0.d0
+               a0(:,:)        = 0.d0
+               avgaslice(:)   = 0.d0
+               a0slice(:)     = 0.d0
+               a0tot          = 0.d0
+               answer%a       = 0.d0
+!$OMP PARALLEL DO DEFAULT(SHARED)&
+!$OMP PRIVATE(phi,j,k,l)
+               DO j=2,jmax+1
+                  DO k=2,kmax+1
+                     DO l=1,lmax
+                        phi = twopi*dble(l)/dble(lmax)
+                        am(j,k) = am(j,k)+rho(j,k,l)*&
+                             cos(amcount*phi)
+                        bm(j,k) = bm(j,k)+rho(j,k,l)*&
+                             sin(amcount*phi)
+                        a0(j,k) = a0(j,k)+rho(j,k,l)
+                     ENDDO
                   ENDDO
-                  ambmslice(j,k) = sqrt((am(j,k))**2+
-     &                 (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2)
-                  avgaslice(k) = avgaslice(k)
-     &                 +ambmslice(j,k)
-                  a0tot(m,count) = a0tot(m,count)+a0(j,k)
-     &                 *(dble(J+1)**2-dble(J)**2)
                ENDDO
-               IF(K==2)THEN
-                  avgamid(m,count) = avgaslice(k)
-                  a0mid(m,count) = a0tot(m,count)
-               ENDIF
-               avga(m,count) = avga(m,count)+avgaslice(k)
-            ENDDO
+!$OMP END PARALLEL DO
+
+!$OMP PARALLEL DO DEFAULT(SHARED)&
+!$OMP PRIVATE(am,bm,j,k) REDUCTION(+:answer%a,a0tot)
+               DO k=2,kmax+1
+                  DO j=jstart,jmax+1
+                     avgaslice(k) = avgaslice(k)+(sqrt((am(j,k))**2+&
+                          (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2))
+                     a0slice(k) = a0slice(k)+a0(j,k)
+                  ENDDO
+                  answer%a = answer%a+avgaslice(k)
+                  a0tot = a0tot+a0slice(k)
+               ENDDO
+!$OMP END PARALLEL DO
+               answer%amid = avgaslice(2)*2.d0/a0slice(2)
+               answer%a = answer%a*2.d0/a0tot
+                  
+
+
+!                DO k=2,kmax+1
+!                   DO j=jstart,jmax+1
+!                      DO l=1,lmax
+!                         phi = twopi*dble(l)/dble(lmax)        
+!                         am(j,k) = am(j,k)+rho(j,k,l)*&
+!                              cos(amcount*phi)
+!                      bm(j,k) = bm(j,k)+rho(j,k,l)*&
+!                           sin(amcount*phi)
+!                      a0(j,k) = a0(j,k)+rho(j,k,l)
+!                   ENDDO
+!                   ambmslice(j,k) = sqrt((am(j,k))**2+
+!      &                 (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2)
+!                   avgaslice(k) = avgaslice(k)
+!      &                 +ambmslice(j,k)
+!                   a0tot(m,count) = a0tot(m,count)+a0(j,k)
+!      &                 *(dble(J+1)**2-dble(J)**2)
+!                ENDDO
+!                IF(K==2)THEN
+!                   avgamid(m,count) = avgaslice(k)
+!                   a0mid(m,count) = a0tot(m,count)
+!                ENDIF
+!                avga(m,count) = avga(m,count)+avgaslice(k)
+!             ENDDO
             DEALLOCATE(a0)
             DEALLOCATE(am)
             DEALLOCATE(bm)
-            DEALLOCATE(ambmslice)
             DEALLOCATE(avgaslice)
-         ENDDO
-!$OMP END PARALLEL DO
-      ENDDO
+            DEALLOCATE(a0slice)
 
-      avgamid(:,:) = avgamid(:,:)*2.d0/a0mid(:,:)
-      avga(:,:)    = avga(:,:)*2.d0/a0tot(:,:)      
-!      avga(:,:)    = LOG10(avga(:,:))
-!      avgamid(:,:) = LOG10(avgamid(:,:))
+            CALL MPI_SEND(answer,2,MPI_DOUBLE_PRECISION,0,AMCOUNT,&
+                 MPI_COMM_WORLD,mpierr)
+            GO TO 300
+         ENDIF
+400      CONTINUE
+      ENDDO
+   ENDIF
+
 !      print*,'FORTRAN COUNT = ',count
 
-!      print*,avga(2,:)
-!      print*,mmax, count
+   IF(myrank.eq.0)THEN
 
       OPEN(UNIT=12,FILE=outfile,FORM='UNFORMATTED')
       WRITE(12) mmax,count
@@ -198,10 +236,13 @@
       WRITE(12) avgamid
       WRITE(12) timearr
       CLOSE(12)
+   ENDIF
 
-      DEALLOCATE(rho)
+   DEALLOCATE(rho)
+   CALL MPI_FINALIZE(mpierr)
       
-      END
+      
+ END PROGRAM Ams
 
       
       
