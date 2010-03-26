@@ -7,6 +7,12 @@
 #PBS -N phalf_MPI
 #PBS -q batch
 #PBS -j oe
-set NP=`wc -l $PBS_NODEFILE | awk '{print $1}'` 
+
 cd $PBS_O_WORKDIR
+
+if (! -x amspec_mpi) then
+mpif90 -O3 -pad -align all -nocheck -fast -shared-intel -openmp -r8 -mtune=core2 -mcmodel=medium -convert big_endian -o amspec_mpi amspec.f
+fi
+
+set NP=`wc -l $PBS_NODEFILE | awk '{print $1}'` 
 mpirun -machinefile $PBS_NODEFILE -np $NP ./launch.sh

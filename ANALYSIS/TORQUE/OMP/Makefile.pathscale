@@ -1,3 +1,4 @@
+#-*-Makefile-*-
 # makefile for the 3-D astrophysical hydrodynamics code.
 
  MAKEFILE = Makefile
