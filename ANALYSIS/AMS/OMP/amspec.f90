@@ -24,11 +24,9 @@
       CHARACTER jmaxin*10,kmaxin*10,lmaxin*10,startin*10,finishin*10
       CHARACTER jstartin*10,skipin*10
 
-      indir = "../WAN_RHO/"
-
       numargs = IARGC()
 
-      IF (numargs.ne.8) THEN
+      IF (numargs.ne.9) THEN
          print*,"Incorrect number of arguments"
          STOP
       ENDIF
@@ -41,6 +39,7 @@
       call getarg(6,skipin)
       call getarg(7,outfile)
       call getarg(8,jstartin)
+      call getarg(9,indir)
       read(jmaxin,*)jmax
       read(kmaxin,*)kmax
       read(lmaxin,*)lmax
@@ -72,7 +71,7 @@
       
       DO i=start,finish,skip
          WRITE(filenum,'(I6.6)')i
-         rhofile = indir//"rho3d."//filenum
+         rhofile = TRIM(indir)//"rho3d."//filenum
          
          INQUIRE(FILE=rhofile,EXIST=EXISTSTAT)
          
@@ -148,7 +147,7 @@
 !      print*,avga(2,:)
 !      print*,mmax, count
 
-      OPEN(UNIT=12,FILE=outfile,FORM='UNFORMATTED')
+      OPEN(UNIT=12,FILE=TRIM(outfile),FORM='UNFORMATTED')
       WRITE(12) mmax,count
       WRITE(12) avga
       WRITE(12) avgamid
