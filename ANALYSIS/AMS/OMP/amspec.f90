@@ -24,7 +24,6 @@
       CHARACTER jmaxin*10,kmaxin*10,lmaxin*10,startin*10,finishin*10
       CHARACTER jstartin*10,skipin*10
 
-      outfile = "indiram15AU.dat"
       indir = "../WAN_RHO/"
 
       numargs = IARGC()
@@ -64,6 +63,7 @@
       timearr(:)         = 0.d0
       a0tot(:,:)         = 0.d0
       a0mid(:,:)         = 0.d0
+      count              = 0
 
       
       DO i=start,finish,skip
