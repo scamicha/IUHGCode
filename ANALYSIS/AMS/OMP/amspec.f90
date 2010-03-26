@@ -15,8 +15,8 @@
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm,ambmslice
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: a0tot,a0mid,a0
       REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice
-      REAL(DOUBLE),DIMENSION(LMAX/2,size) :: avga,avgamid
-      REAL(DOUBLE),DIMENSION(size) :: timearr
+      REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: avga,avgamid
+      REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: timearr
       REAL(DOUBLE) :: time,phi,dphi
       LOGICAL EXISTSTAT
       CHARACTER outfile*80,indir*80
@@ -24,11 +24,9 @@
       CHARACTER jmaxin*10,kmaxin*10,lmaxin*10,startin*10,finishin*10
       CHARACTER jstartin*10,skipin*10
 
-      indir = "../WAN_RHO/"
-
       numargs = IARGC()
 
-      IF (numargs.ne.8) THEN
+      IF (numargs.ne.9) THEN
          print*,"Incorrect number of arguments"
          STOP
       ENDIF
@@ -41,6 +39,7 @@
       call getarg(6,skipin)
       call getarg(7,outfile)
       call getarg(8,jstartin)
+      call getarg(9,indir)
       read(jmaxin,*)jmax
       read(kmaxin,*)kmax
       read(lmaxin,*)lmax
@@ -49,14 +48,18 @@
       read(skipin,*)skip
       read(jstartin,*)jstart
 
-      mmax   = LMAX/2
+      size  = ((finish-start)/skip)+1
+      mmax  = LMAX/2
       jmax2 = jmax+2
       kmax2 = kmax+2
       dphi  = twopi/lmax
 
       ALLOCATE(rho(jmax2,kmax2,lmax))
+      ALLOCATE(avga(LMAX/2,size))
+      ALLOCATE(avgamid(LMAX/2,size))
       ALLOCATE(a0tot(mmax,size))
       ALLOCATE(a0mid(mmax,size))
+      ALLOCATE(timearr(size))
 
       avga(:,:)          = 0.d0
       avgamid(:,:)       = 0.d0
@@ -68,7 +71,7 @@
       
       DO i=start,finish,skip
          WRITE(filenum,'(I6.6)')i
-         rhofile = indir//"rho3d."//filenum
+         rhofile = TRIM(indir)//"rho3d."//filenum
          
          INQUIRE(FILE=rhofile,EXIST=EXISTSTAT)
          
@@ -144,7 +147,7 @@
 !      print*,avga(2,:)
 !      print*,mmax, count
 
-      OPEN(UNIT=12,FILE=outfile,FORM='UNFORMATTED')
+      OPEN(UNIT=12,FILE=TRIM(outfile),FORM='UNFORMATTED')
       WRITE(12) mmax,count
       WRITE(12) avga
       WRITE(12) avgamid
