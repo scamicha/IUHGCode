@@ -89,8 +89,8 @@
          timearr(count) = time/tconv
          
 
-!$OMP PARALLEL DO DEFAULT(SHARED) 
-!$OMP&PRIVATE(am,bm,a0,avgaslice,ambmslice,phi,j,k,l)
+!$OMP PARALLEL DO DEFAULT(SHARED)  &
+!$OMP PRIVATE(am,bm,a0,avgaslice,ambmslice,phi,j,k,l)
 
          DO m=1,MMAX
             ALLOCATE(a0(jmax2,kmax2))
@@ -107,18 +107,18 @@
                DO j=jstart,jmax+1
                   DO l=1,lmax
                      phi = twopi*dble(l)/dble(lmax)        
-                     am(j,k) = am(j,k)+rho(j,k,l)*
-     &                    cos(m*phi)
-                     bm(j,k) = bm(j,k)+rho(j,k,l)*
-     &                    sin(m*phi)
+                     am(j,k) = am(j,k)+rho(j,k,l)*&
+                          cos(m*phi)
+                     bm(j,k) = bm(j,k)+rho(j,k,l)*& 
+                          sin(m*phi)
                      a0(j,k) = a0(j,k)+rho(j,k,l)
                   ENDDO
-                  ambmslice(j,k) = sqrt((am(j,k))**2+
-     &                 (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2)
-                  avgaslice(k) = avgaslice(k)
-     &                 +ambmslice(j,k)
-                  a0tot(m,count) = a0tot(m,count)+a0(j,k)
-     &                 *(dble(J+1)**2-dble(J)**2)
+                  ambmslice(j,k) = sqrt((am(j,k))**2+&
+                       (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2)
+                  avgaslice(k) = avgaslice(k)&
+                       +ambmslice(j,k)
+                  a0tot(m,count) = a0tot(m,count)+a0(j,k)&
+                       *(dble(J+1)**2-dble(J)**2)
                ENDDO
                IF(K==2)THEN
                   avgamid(m,count) = avgaslice(k)
@@ -153,7 +153,7 @@
 
       DEALLOCATE(rho)
       
-      END
+    END PROGRAM Ams
 
       
       
