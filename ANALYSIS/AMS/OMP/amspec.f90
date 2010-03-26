@@ -15,8 +15,8 @@
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm,ambmslice
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: a0tot,a0mid,a0
       REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice
-      REAL(DOUBLE),DIMENSION(LMAX/2,size) :: avga,avgamid
-      REAL(DOUBLE),DIMENSION(size) :: timearr
+      REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: avga,avgamid
+      REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: timearr
       REAL(DOUBLE) :: time,phi,dphi
       LOGICAL EXISTSTAT
       CHARACTER outfile*80,indir*80
@@ -49,14 +49,18 @@
       read(skipin,*)skip
       read(jstartin,*)jstart
 
-      mmax   = LMAX/2
+      size  = ((finish-start)/skip)+1
+      mmax  = LMAX/2
       jmax2 = jmax+2
       kmax2 = kmax+2
       dphi  = twopi/lmax
 
       ALLOCATE(rho(jmax2,kmax2,lmax))
+      ALLOCATE(avga(LMAX/2,size))
+      ALLOCATE(avgamid(LMAX/2,size))
       ALLOCATE(a0tot(mmax,size))
       ALLOCATE(a0mid(mmax,size))
+      ALLOCATE(timearr(size))
 
       avga(:,:)          = 0.d0
       avgamid(:,:)       = 0.d0
