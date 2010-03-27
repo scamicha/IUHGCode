@@ -21,7 +21,7 @@
       REAL(DOUBLE),PARAMETER :: twopi = 2.d0*pi
       REAL(DOUBLE),DIMENSION(:,:,:),ALLOCATABLE    :: rho
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm
-      REAL(DOUBLE)           :: a0tot
+      REAL(DOUBLE)           :: a0tot,tmpa
       REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice,a0slice
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: avga,avgamid,a0
       REAL(DOUBLE),DIMENSION(size) :: timearr
@@ -172,21 +172,21 @@
                   ENDDO
                ENDDO
 !$OMP END PARALLEL DO
-
+               tmpa = 0.d0
 !$OMP PARALLEL DO DEFAULT(SHARED)&
-!$OMP PRIVATE(am,bm,j,k) REDUCTION(+:answer%a,a0tot)
+!$OMP PRIVATE(am,bm,j,k) REDUCTION(+:tmpa,a0tot)
                DO k=2,kmax+1
                   DO j=jstart,jmax+1
                      avgaslice(k) = avgaslice(k)+(sqrt((am(j,k))**2+&
                           (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2))
                      a0slice(k) = a0slice(k)+a0(j,k)
                   ENDDO
-                  answer%a = answer%a+avgaslice(k)
+                  tmpa = tmpa%a+avgaslice(k)
                   a0tot = a0tot+a0slice(k)
                ENDDO
 !$OMP END PARALLEL DO
                answer%amid = avgaslice(2)*2.d0/a0slice(2)
-               answer%a = answer%a*2.d0/a0tot
+               answer%a = tmpa*2.d0/a0tot
                   
 
 
