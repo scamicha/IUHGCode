@@ -23,7 +23,7 @@
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm
       REAL(DOUBLE)           :: a0tot
       REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice,a0slice
-      REAL(DOUBLE),DIMENSION(:,:) :: avga,avgamid
+      REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: avga,avgamid,a0
       REAL(DOUBLE),DIMENSION(size) :: timearr
       REAL(DOUBLE) :: time,phi,dphi
       LOGICAL EXISTSTAT
@@ -87,7 +87,7 @@
 
 911         CONTINUE
 
-            IF(I.lt.IEND) THEN
+            IF(I.lt.finish) THEN
                WRITE(filenum,'(I6.6)')i
                rhofile = indir//"rho3d."//filenum
          
@@ -95,8 +95,9 @@
          
                IF(.not.EXISTSTAT) THEN
                   print*,"file ",rhofile, "does not exist"
-                  I = I+1
-                  GO TO 911
+                  STOP
+!                  I = I+1
+!                  GO TO 911
                ENDIF
          
 !         print*," AMS OUT -> OPENING FILE: ", rhofile
