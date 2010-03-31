@@ -22,7 +22,6 @@
       REAL(DOUBLE),DIMENSION(:,:,:),ALLOCATABLE    :: rho
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm
       REAL(DOUBLE)           :: a0tot,tmpa
-      REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: avgaslice,a0slice
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: avga,avgamid,a0
       REAL(DOUBLE),DIMENSION(size) :: timearr
       REAL(DOUBLE) :: time,phi,dphi
@@ -148,21 +147,19 @@
                ALLOCATE(a0(jmax2,kmax2))
                ALLOCATE(am(jmax2,kmax2))
                ALLOCATE(bm(jmax2,kmax2))
-               ALLOCATE(avgaslice(kmax2))
-               ALLOCATE(a0slice(kmax2))
                am(:,:)        = 0.d0
                bm(:,:)        = 0.d0
                a0(:,:)        = 0.d0
-               avgaslice(:)   = 0.d0
-               a0slice(:)     = 0.d0
                a0tot          = 0.d0
+               tmpa           = 0.d0
                answer%a       = 0.d0
 !$OMP PARALLEL DO DEFAULT(SHARED)&
-!$OMP PRIVATE(phi,j,k,l,amcount) REDUCTION(+:am,bm,a0)
-               DO j=2,jmax+1
+!$OMP PRIVATE(phi,j,k) REDUCTION(+:am,bm,a0)&
+!$OMP FIRSTPRIVATE(amcount)               
+               DO l=1,lmax
+                  phi = twopi*dble(l)/dble(lmax)
                   DO k=2,kmax+1
-                     DO l=1,lmax
-                        phi = twopi*dble(l)/dble(lmax)
+                     DO j=2,jmax+1
                         am(j,k) = am(j,k)+rho(j,k,l)*&
                              cos(amcount*phi)
                         bm(j,k) = bm(j,k)+rho(j,k,l)*&
@@ -172,23 +169,29 @@
                   ENDDO
                ENDDO
 !$OMP END PARALLEL DO
-               tmpa = 0.d0
 !$OMP PARALLEL DO DEFAULT(SHARED)&
-!$OMP PRIVATE(am,bm,j,k) REDUCTION(+:tmpa,a0tot,avgaslice,a0slice)
-               DO k=2,kmax+1
-                  DO j=jstart,jmax+1
-                     avgaslice(k) = avgaslice(k)+(sqrt((am(j,k))**2+&
+!$OMP PRIVATE(k) REDUCTION(+:tmpa,a0tot)
+               DO j=jstart,jmax+1
+                  DO k=2,kmax+1
+                     tmpa = tmpa+(sqrt((am(j,k))**2+&
                           (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2))
-                     a0slice(k) = a0slice(k)+a0(j,k)
+                     a0tot = a0tot+a0(j,k)
                   ENDDO
-                  tmpa = tmpa+avgaslice(k)
-                  a0tot = a0tot+a0slice(k)
                ENDDO
 !$OMP END PARALLEL DO
-               answer%amid = avgaslice(2)*2.d0/a0slice(2)
                answer%a = tmpa*2.d0/a0tot
+               tmpa = 0.d0
+               a0tot = 0.d0
+!$OMP PARALLEL DO DEFAULT(SHARED)&
+!$OMP REDUCTION(+:tmpa,a0tot)
+               DO j=jstart,jmax+1
+                     tmpa = tmpa+(sqrt((am(j,2))**2+&
+                          (bm(j,2))**2)*(dble(J+1)**2-dble(J)**2))
+                     a0tot = a0tot+a0(j,2)
+               ENDDO
+!$OMP END PARALLEL DO               
                   
-
+               answer%amid = tmpa*2.d0/a0tot
 
 !                DO k=2,kmax+1
 !                   DO j=jstart,jmax+1
