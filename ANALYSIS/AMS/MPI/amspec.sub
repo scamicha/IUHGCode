@@ -11,7 +11,11 @@
 cd $PBS_O_WORKDIR
 
 if (! -x amspec_mpi) then
-mpif90 -O3 -pad -align all -nocheck -fast -shared-intel -openmp -r8 -mtune=core2 -mcmodel=medium -convert big_endian -o amspec_mpi amspec.f90
+mpif90 -O3 -pad -align all -nocheck -ipo -no-prec-div -shared-intel -openmp -r8 -xHost -mcmodel=medium -convert big_endian -o amspec_mpi amspec.f90
+endif
+
+if (! -x  launch.sh) then
+chmod u+x launch.sh
 endif
 
 set NP=`wc -l $PBS_NODEFILE | awk '{print $1}'` 

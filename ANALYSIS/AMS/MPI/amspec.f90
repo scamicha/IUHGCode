@@ -88,10 +88,10 @@
 911         CONTINUE
 
             IF(I.lt.finish) THEN
-               WRITE(filenum,'(I6.6)')i
-               rhofile = indir//"rho3d."//filenum
+               WRITE(filenum,'(I6.6)')i+skip
+               rhofile = trim(indir)//"rho3d."//filenum
          
-               INQUIRE(FILE=rhofile,EXIST=EXISTSTAT)
+               INQUIRE(FILE=trim(rhofile),EXIST=EXISTSTAT)
          
                IF(.not.EXISTSTAT) THEN
                   print*,"file ",rhofile, "does not exist"
@@ -101,7 +101,7 @@
                ENDIF
          
 !         print*," AMS OUT -> OPENING FILE: ", rhofile
-               OPEN(UNIT=12,FILE=rhofile,FORM="UNFORMATTED")
+               OPEN(UNIT=12,FILE=trim(rhofile),FORM="UNFORMATTED")
 
                READ(12) rho
                READ(12) time
@@ -112,7 +112,7 @@
                timearr(count) = time/tconv
             ENDIF
 
-            DO PROCESS=1,MMAX+1
+            DO PROCESS=1,MMAX
                call MPI_RECV(answer,2,MPI_DOUBLE_PRECISION,&
                     MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,status,&
                     mpierr)
@@ -123,7 +123,7 @@
                avga(m_return,count) = answer%a
                avgamid(m_return,count) = answer%amid
                
-               IF(AMCOUNT.lt.MMAX) THEN
+               IF(AMCOUNT.le.MMAX) THEN
                   call MPI_SEND(AMCOUNT,1,MPI_INTEGER,sender,AMCOUNT,&
                        MPI_COMM_WORLD,mpierr)
                   AMCOUNT = AMCOUNT+1
@@ -158,7 +158,7 @@
                a0tot          = 0.d0
                answer%a       = 0.d0
 !$OMP PARALLEL DO DEFAULT(SHARED)&
-!$OMP PRIVATE(phi,j,k,l)
+!$OMP PRIVATE(phi,j,k,l,amcount) REDUCTION(+:am,bm,a0)
                DO j=2,jmax+1
                   DO k=2,kmax+1
                      DO l=1,lmax
@@ -174,7 +174,7 @@
 !$OMP END PARALLEL DO
                tmpa = 0.d0
 !$OMP PARALLEL DO DEFAULT(SHARED)&
-!$OMP PRIVATE(am,bm,j,k) REDUCTION(+:tmpa,a0tot)
+!$OMP PRIVATE(am,bm,j,k) REDUCTION(+:tmpa,a0tot,avgaslice,a0slice)
                DO k=2,kmax+1
                   DO j=jstart,jmax+1
                      avgaslice(k) = avgaslice(k)+(sqrt((am(j,k))**2+&
