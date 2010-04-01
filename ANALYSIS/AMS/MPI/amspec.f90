@@ -169,6 +169,7 @@
                   ENDDO
                ENDDO
 !$OMP END PARALLEL DO
+
 !$OMP PARALLEL DO DEFAULT(SHARED)&
 !$OMP PRIVATE(k) REDUCTION(+:tmpa,a0tot)
                DO j=jstart,jmax+1
