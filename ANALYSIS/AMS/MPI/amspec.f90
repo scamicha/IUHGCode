@@ -159,7 +159,7 @@
                DO l=1,lmax
                   phi = twopi*dble(l)/dble(lmax)
                   DO k=2,kmax+1
-                     DO j=2,jmax+1
+                     DO j=jstart,jmax+1
                         am(j,k) = am(j,k)+rho(j,k,l)*&
                              cos(amcount*phi)
                         bm(j,k) = bm(j,k)+rho(j,k,l)*&
@@ -220,7 +220,6 @@
             DEALLOCATE(a0)
             DEALLOCATE(am)
             DEALLOCATE(bm)
-            DEALLOCATE(avgaslice)
             DEALLOCATE(a0slice)
 
             CALL MPI_SEND(answer,2,MPI_DOUBLE_PRECISION,0,AMCOUNT,&
