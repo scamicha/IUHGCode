@@ -4,13 +4,16 @@ PRO ifof, start, finish
   KMAX = 64
   LMAX = 128
   swap_endian = 1
-  rhoprefix = '../RHOTEMP/rho3d.'
+  rhoprefix = './RHOTEMP/rho3d.'
   rhofile = ''
   torp  = 1605.63
   dr  = 0.2021807d0
   jreq = 250L
   aujreq = 40.d0
+  mstar = 1.d0    ; stellar mass in solar masses
+  mratio = 0.14   ; disk/star mass ratio
 
+  mtot  = mstar + (mratio*mstar)
   JMAX2 = JMAX+2
   KMAX2 = KMAX+2
   RHOSTART  = DBLARR(JMAX2,KMAX2,LMAX)
@@ -70,6 +73,7 @@ PRO ifof, start, finish
      MDOT(J) = MCYLEND(J) - MCYLSTART(J)
   ENDFOR
 
+  rhf = rhf*AUJREQ/rhf(JREQ)
   COUNT = 0L
   FOR J=2,JMAX DO BEGIN
      IF (((MDOT(J) GT 0.d0) AND (MDOT(J-1) LE 0.d0)) OR ((MDOT(J)  $
@@ -80,10 +84,14 @@ PRO ifof, start, finish
   ENDFOR
 
   IFOFBDY = IFOFBDY(0:COUNT-1)
+
+  MDOT = MDOT*mtot          ; mass now in solar masses
+  TINTERVAL = ENDTIME-STARTIME
+  ent  = AUJREQ/(r(JREQ)*7.93d-3*mtot^(-1.d0/3.d0))
+  TINTERVAL = TINTERVAL*ent^(1.5d0)*mtot^(-1.d0)*3.55d3/3.15576d7
   STARTIME = STARTIME/torp
   ENDTIME = ENDTIME/torp
-  
-  rhf = rhf*AUJREQ/rhf(JREQ)
+  MDOT = MDOT/TINTERVAL
 
   print, IFOFBDY
   print, STARTIME,ENDTIME
