@@ -152,7 +152,7 @@
                a0(:,:)        = 0.d0
                a0tot          = 0.d0
                tmpa           = 0.d0
-               answer%a       = 0.d0
+
 !$OMP PARALLEL DO DEFAULT(SHARED)&
 !$OMP PRIVATE(phi,j,k) REDUCTION(+:am,bm,a0)&
 !$OMP FIRSTPRIVATE(amcount)               
@@ -176,7 +176,7 @@
                   DO k=2,kmax+1
                      tmpa = tmpa+(sqrt((am(j,k))**2+&
                           (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2))
-                     a0tot = a0tot+a0(j,k)
+                     a0tot = a0tot+a0(j,k)*(dble(J+1)**2-dble(J)**2))
                   ENDDO
                ENDDO
 !$OMP END PARALLEL DO
@@ -188,7 +188,7 @@
                DO j=jstart,jmax+1
                      tmpa = tmpa+(sqrt((am(j,2))**2+&
                           (bm(j,2))**2)*(dble(J+1)**2-dble(J)**2))
-                     a0tot = a0tot+a0(j,2)
+                     a0tot = a0tot+a0(j,2)*(dble(J+1)**2-dble(J)**2))
                ENDDO
 !$OMP END PARALLEL DO               
                   
@@ -220,7 +220,6 @@
             DEALLOCATE(a0)
             DEALLOCATE(am)
             DEALLOCATE(bm)
-            DEALLOCATE(a0slice)
 
             CALL MPI_SEND(answer,2,MPI_DOUBLE_PRECISION,0,AMCOUNT,&
                  MPI_COMM_WORLD,mpierr)
