@@ -13,7 +13,7 @@
       INTEGER,PARAMETER :: jstart = 90
 
       INTEGER :: jmax2,kmax2,mmax,amcount,process
-      INTEGER :: count,j,k,l,m,i,m_return,sender
+      INTEGER :: count,j,k,l,m,i,m_return,sender,numargs
       INTEGER :: numranks,mpierr,myrank
       INTEGER :: status(MPI_STATUS_SIZE)
       REAL(DOUBLE),PARAMETER :: tconv = 1605.63
@@ -28,6 +28,8 @@
       LOGICAL EXISTSTAT
       CHARACTER outfile*80,indir*80
       CHARACTER rhofile*80,amfile*80,filenum*8,str*80
+      CHARACTER jmaxin*10,kmaxin*10,lmaxin*10,startin*10,finishin*10
+      CHARACTER jstartin*10,skipin*10
 
       type answer_return
          sequence
@@ -36,8 +38,29 @@
 
       type (answer_return) answer
 
-      outfile = "indiram15AU.dat"
-      indir = "../WAN_RHO/"
+      numargs = IARGC()
+
+      IF (numargs.ne.9) THEN
+         print*,"Incorrect number of arguments"
+         STOP
+      ENDIF
+      
+      call getarg(1,jmaxin)
+      call getarg(2,kmaxin)
+      call getarg(3,lmaxin)
+      call getarg(4,startin)
+      call getarg(5,finishin)
+      call getarg(6,skipin)
+      call getarg(7,outfile)
+      call getarg(8,jstartin)
+      call getarg(9,indir)
+      read(jmaxin,*)jmax
+      read(kmaxin,*)kmax
+      read(lmaxin,*)lmax
+      read(startin,*)start
+      read(finishin,*)finish
+      read(skipin,*)skip
+      read(jstartin,*)jstart
 
       call MPI_INIT(mpierr)
       call MPI_COMM_RANK(MPI_COMM_WORLD, myrank, mpierr)
