@@ -199,7 +199,7 @@
                   DO k=2,kmax+1
                      tmpa = tmpa+(sqrt((am(j,k))**2+&
                           (bm(j,k))**2)*(dble(J+1)**2-dble(J)**2))
-                     a0tot = a0tot+a0(j,k)*(dble(J+1)**2-dble(J)**2))
+                     a0tot = a0tot+a0(j,k)*(dble(J+1)**2-dble(J)**2)
                   ENDDO
                ENDDO
 !$OMP END PARALLEL DO
@@ -211,7 +211,7 @@
                DO j=jstart,jmax+1
                      tmpa = tmpa+(sqrt((am(j,2))**2+&
                           (bm(j,2))**2)*(dble(J+1)**2-dble(J)**2))
-                     a0tot = a0tot+a0(j,2)*(dble(J+1)**2-dble(J)**2))
+                     a0tot = a0tot+a0(j,2)*(dble(J+1)**2-dble(J)**2)
                ENDDO
 !$OMP END PARALLEL DO               
                   
