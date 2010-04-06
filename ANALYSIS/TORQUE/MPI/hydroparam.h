@@ -28,10 +28,10 @@ C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
 
       parameter (ISTART=150000,IEND=320000,ISKIP=5000)
       parameter (kmax= 64, kmax1=kmax+1, kmax2=kmax+2)
-      parameter(pot3kmax=64, pot3kmax1=pot3kmax+1, pot3kmax2=pot3kmax+2)
+      parameter(pot3kmax=kmax, pot3kmax1=pot3kmax+1, pot3kmax2=pot3kmax+2)
 
       parameter (jmax=512, jmax1=jmax+1, jmax2=jmax+2)
-      parameter(pot3jmax=512,pot3jmax1=pot3jmax+1,pot3jmax2=pot3jmax+2)
+      parameter(pot3jmax=jmax,pot3jmax1=pot3jmax+1,pot3jmax2=pot3jmax+2)
 
       parameter (lmax=128, lmax2=lmax/2)
 

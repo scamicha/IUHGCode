@@ -68,14 +68,8 @@ C$OMP THREADPRIVATE(/CBLKT/,/BLOKJ1/)
       INTEGER I, NUMFILES
 CSAM....Read a saved file to set up r and z grid
 
-
-
-
-      ISTART = 150000
-      IEND   = 170000
-      ISKIP  = 5000
       write (filenum,'(I6.6)')IEND
-      phifile='./torquedecompP0.5OMP_VAMPdat.'//filenum ! CHANGE      
+      phifile=trim(outdir)//trim(outfile)//filenum      
 
 
       COUNTER=0
@@ -91,7 +85,7 @@ CSAM....Read a saved file to set up r and z grid
 
       do I=ISTART,IEND,ISKIP
          write (filenum,'(I6.6)')I
-         savedfile='../SAVED/saved.'//filenum
+         savedfile=trim(datadir)//'saved.'//filenum
          print *, savedfile
          OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
      &        STATUS="OLD",ERR=911)
