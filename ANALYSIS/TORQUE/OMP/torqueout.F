@@ -11,7 +11,7 @@
       real(KIND=8), dimension(JMAX2,KMAX2) :: treyn2d,vcol
 
       real(KIND=8) :: 
-     &  kephi,dummy0,dummy1,dummy2,Aomega,rconv, vconv, limiter,tc,
+     &  kephi,dummy0,dummy1,dummy2,rconv, vconv, limiter,tc,
      &  deriv,eta, dummy, dummy3, dummy4, dummy5, dummy6,timediff
 
       real(KIND=8), save :: times
@@ -22,16 +22,13 @@
       integer :: AMCOUNT,J, K, L, I,LM,LP,JREQ,TINITK,KZPOL,
      &           ENON,LMM,LPP,O,H
 
-      mstar  = 1.d0/(1.d0-tmassini)
-      rdisk  = 40.d0 
-      gamma  = 1.666666d0
-      Aomega = sqrt(6.67d-8*0.5d0*1.99d33)
+      mtot   = mstar/(1.d0-tmassini)
       
-      kconst = rdisk*mstar**(0.333333333333333)/(r(JREQ-2)*7.93d-3)
-      econv = 2.24d48*mstar**(7.d0/3.d0)/kconst
-      rconv = rdisk/r(JREQ-2)*1.49d13
-      tconv = 3.55d3/mstar*kconst**(1.5d0)
-      vconv = 3.34d2*mstar**(2.d0/3.d0)/sqrt(kconst)
+      kconst = rdiskau*mtot**(0.333333333333333)/(r(JREQ-2)*7.93d-3)
+      econv = 2.24d48*mtot**(7.d0/3.d0)/kconst
+      rconv = rdiskau/r(JREQ-2)*1.49d13
+      tconv = 3.55d3/mtot*kconst**(1.5d0)
+      vconv = 3.34d2*mtot**(2.d0/3.d0)/sqrt(kconst)
 !      print *, tconv
 
 
@@ -96,6 +93,20 @@
 ! up to a face is mass_fc.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       IF(AMCOUNT.EQ.0)THEN
+
+         call TempFind()
+
+C$OMP DO SCHEDULE(STATIC)
+         DO L=1,LMAX
+            DO K=1,KMAX2
+               DO J=1,jmax2
+                  p(J,K,L) = bkmpcgs*tempk(J,K,L)*rhoconv  ! not multiplying by rho since we divide by it for c_s
+     &                 / (muc*pconv)
+
+               end do
+            ENDDO
+         ENDDO
+C$OMP END DO
       
          do J = 3, JMAX 
             kepler_fc(J) = sqrt((1.d0-tmassini)/r(J)**3)
@@ -118,8 +129,8 @@
                   sigma_2d(J,L) =  sigma_2d(J,L) + 
      &                 (rhosave(J,K,L)+rhosave(J-1,K,L))*zof3n
 
-                  dummy6 = dummy6+(gamma*(gamma-1.d0))*(eps(J,K,L)+ 
-     &                 eps(J-1,K,L) )*zof3n
+                  dummy6 = dummy6+0.5d0(gamma1(J,K,L)+gamma1(J-1,K,L))* 
+     &                 (p(J,K,L)+p(J-1,K,L))*zof3n
 
                   if ( 0.5d0*( rhosave(J,K,L) + rhosave(J-1,K,L) ) >= 
      &                 limiter ) then
@@ -131,9 +142,8 @@
 
                enddo
 
-               dummy1 = dummy1 + sqrt((gamma*(gamma-1.d0))*(eps(J,2,L) + 
-     &              eps(J-1,2,L) )/( rhosave(J,2,L) + 
-     &              rhosave(J-1,2,L) ) )
+               dummy1 = dummy1 + sqrt( 0.25d0(gamma1(J,K,L)+
+     &              gamma1(J-1,K,L))*(p(J,K,L)+p(J-1,K,L)) )
 
                dummy2 = dummy2 + ( a(J,2,L) + a(J-1,2,L) ) / 
      &              ( r(J)**2 * ( rhosave(J,2,L) + rhosave(J-1,2,L)))

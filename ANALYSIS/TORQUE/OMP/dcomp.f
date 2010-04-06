@@ -99,12 +99,6 @@ CSAM....Read a saved file to set up r and z grid
          read(8) tmassini
          CLOSE(8)
 
-         ISYM   = 2
-         MAXTRM = 10
-         REDGE  = 0.d0
-         GRAV = 1.0
-         PI = ACOS(-1.0)
-         DTHETA = 2.0*PI/dble(LMAX)
          DO j=1, JMAX2
             r(j)=(j-2)*ROF3N
             rhf(j) =((j-2)*ROF3N)+(ROF3N/2)
@@ -114,6 +108,19 @@ CSAM....Read a saved file to set up r and z grid
             z(k) = (k-2)*ZOF3N
             zhf(k) = ((k-2)*ZOF3N)+(ZOF3N/2)
          ENDDO
+
+         IF (I.eq.ISTART) THEN
+            call INIT()
+            call INITENGTABLE()
+         ENDIF
+
+         ISYM   = 2
+         MAXTRM = 10
+         REDGE  = 0.d0
+         GRAV = 1.0
+         PI = ACOS(-1.0)
+         DTHETA = 2.0*PI/dble(LMAX)
+         
          rholmt = den*1.d-12
          pi = acos(-1.d0)
          dtheta = 2.d0*pi/dble(LMAX)
