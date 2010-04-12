@@ -93,7 +93,7 @@ CSAM....Read a saved file to set up r and z grid
       IF(myrank.eq.0) THEN
 
          write (filenum,'(I6.6)')IEND
-         phifile=trim(outdir)//trim(outfile)//filenum ! CHANGE      
+         phifile=trim(outdir)//trim(outfile)//filenum      
 
 
          COUNTER=0
