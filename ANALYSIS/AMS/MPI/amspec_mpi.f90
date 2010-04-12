@@ -3,6 +3,8 @@
       IMPLICIT NONE
 
       INCLUDE 'mpif.h'
+      
+      INTEGER,PARAMETER :: DOUBLE = SELECTED_REAL_KIND(15,300)
 
       INTEGER :: jmax,kmax,lmax,start,finish,skip,size,jstart
       INTEGER :: jmax2,kmax2,mmax,amcount,process
