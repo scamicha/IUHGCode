@@ -5,13 +5,8 @@
       INCLUDE 'mpif.h'
       
       INTEGER,PARAMETER :: DOUBLE = SELECTED_REAL_KIND(15,300)
-      INTEGER,PARAMETER :: jmax=512,kmax=64,lmax=128
-      INTEGER,PARAMETER :: start = 110200
-      INTEGER,PARAMETER :: finish = 250000
-      INTEGER,PARAMETER :: skip = 200
-      INTEGER,PARAMETER :: size = ((finish-start)/skip)+1
-      INTEGER,PARAMETER :: jstart = 90
 
+      INTEGER :: jmax,kmax,lmax,start,finish,skip,size,jstart
       INTEGER :: jmax2,kmax2,mmax,amcount,process
       INTEGER :: count,j,k,l,m,i,m_return,sender,numargs
       INTEGER :: numranks,mpierr,myrank
@@ -66,6 +61,7 @@
       call MPI_COMM_RANK(MPI_COMM_WORLD, myrank, mpierr)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, numranks, mpierr)
 
+      size = ((finish-start)/skip)+1
       mmax   = LMAX/2
       jmax2 = jmax+2
       kmax2 = kmax+2
