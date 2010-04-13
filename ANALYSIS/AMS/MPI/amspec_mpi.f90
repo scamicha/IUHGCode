@@ -18,7 +18,7 @@
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: am,bm
       REAL(DOUBLE)           :: a0tot,tmpa
       REAL(DOUBLE),DIMENSION(:,:),ALLOCATABLE      :: avga,avgamid,a0
-      REAL(DOUBLE),DIMENSION(size) :: timearr
+      REAL(DOUBLE),DIMENSION(:),ALLOCATABLE        :: timearr
       REAL(DOUBLE) :: time,phi,dphi
       LOGICAL EXISTSTAT
       CHARACTER outfile*80,indir*80
@@ -77,6 +77,7 @@
 
          ALLOCATE(avga(LMAX/2,size))
          ALLOCATE(avgamid(LMAX/2,size))
+         ALLOCATE(timearr(size))
 
          count = 0
          write(filenum,'(I6.6)')start
