@@ -7,6 +7,7 @@ PROGRAM PERIODOGRAM
   real(double) :: ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,OMMAX,tmassini
   real(double) :: dr,pi,torp,aujreq
   real(double),dimension(:,:,:),allocatable :: rho,s,t,a,eps,omega
+  real(double),dimesion(:,:,:),allocatable :: amplitude,angle
   real(double),dimension(:),allocatable :: omegavg,kappa,massum,timearr
   character :: rhodir*80, savedir*80,rhofile*94,savedfile*94
   character :: jmaxin*8,kmaxin*8,lmaxin*8,istartin*8,iendin*8,iskipin*8,modein*8
@@ -17,7 +18,7 @@ PROGRAM PERIODOGRAM
 
   numargs = IARGC()
 
-  if(numargs.ne. ) then
+  if(numargs.ne. 11) then
      print*,"Incorrect number of arguments"
      STOP
   ENDIF
@@ -59,6 +60,8 @@ PROGRAM PERIODOGRAM
   allocate(omegavg(jmax2))
   allocate(kappa(jmax2))
   allocate(massum(jmax2))
+  allocate(amplitude(jmax2,modes,numfiles))
+  allocate(angle(jmax2,modes,numfiles))
 
   write (filenum,'(I8.8)')iend
   savedfile=trim(savedir)//'saved.'//filenum
@@ -126,20 +129,24 @@ PROGRAM PERIODOGRAM
      READ(8) RHO
      READ(8) time
      CLOSE(8)
-     timearr(I)
+     timearr(I)=time
+     CALL GlobalCoef(rho,I,jmax,lmax,modes,amplitude,angle)
+  ENDDO
+
+  
      
-subroutine Globalcoef(rho,JMAX,LMAX,cn_amp,cn_ang)
+subroutine GlobalCoef(rho,I,JMAX,LMAX,MMAX,cn_amp,cn_ang)
   implicit none
   integer, parameter :: double = selected_real_kind(15,300)
 
   real(double), dimension(:,:,:) :: rho
   real(double), allocatable, dimension(:,:)   :: an,bn
   real(double), allocatable, dimension(:)     :: rho0
-  real(double), dimension(:,:) :: cn_amp,cn_ang
+  real(double), dimension(:,:,:) :: cn_amp,cn_ang
   real(double) :: angle, pi
 
   integer :: J, K, L, JMAX, LMAX
-  integer :: N, I
+  integer :: N, I,MMAX
 
 ! begin I/O
 
@@ -168,10 +175,10 @@ subroutine Globalcoef(rho,JMAX,LMAX,cn_amp,cn_ang)
 !$OMP DO DEFAULT(SHARED) PRIVATE(angle) FIRSTPRIVATE(pi) REDUCTION(+:an,bn)
      do J = 2, JMAX+1
         an(J,0) = rho0*dble(LMAX)
-        do N = 1, LMAX/2
+        do N = 1, MMAX
            an(J,N) = 0.d0
            bn(J,N) = 0.d0
-           cn_amp(J,N) = 0.d0
+           cn_amp(J,N,I) = 0.d0
            do L = 1, LMAX
               angle = (dble(L))/(LMAX)*2.d0*pi
               an(J,N) = an(J,N) + rho(J,0,L)*cos(dble(N)*angle)
@@ -182,9 +189,9 @@ subroutine Globalcoef(rho,JMAX,LMAX,cn_amp,cn_ang)
            bn(J,N) = bn(J,N)/(dble(LMAX))
            
 ! compute the amplitude
-           cn_amp(J,N) = 2.d0*sqrt(an(J,N)**2+bn(J,N)**2)/rho0(J)
+           cn_amp(J,N,I) = 2.d0*sqrt(an(J,N)**2+bn(J,N)**2)/rho0(J)
 ! compute the phase angle
-           cn_ang(J,N) = atan2(an(J,N),bn(J,N))+pi
+           cn_ang(J,N,I) = atan2(an(J,N),bn(J,N))+pi
 
         enddo
      enddo
