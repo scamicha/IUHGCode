@@ -25,14 +25,14 @@ C
       real*8 rholmt,epslmt,dumlmt
       COMMON /RELIMITS/RHOLMT,EPSLMT,DUMLMT
 
-      integer jin,itype,ISTART,IEND
+      integer jin,itype
       real*8 tmassini,tmassadd,tmassout,tmassacc
       real*8 starphi,diskphi,tinphi
       COMMON /GAP/starphi(jmax2,kmax2,lmax),
      &     tinphi(jmax2,kmax2,lmax),
      &     diskphi(jmax2,kmax2,lmax),
      &     tmassini,tmassadd,tmassout,tmassacc,
-     &     jin,itype,ISTART,IEND
+     &     jin,itype
 
 
       REAL*8 JN,s,t,a,u,w,omega
