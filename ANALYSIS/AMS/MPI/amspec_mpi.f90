@@ -9,8 +9,8 @@
       INTEGER :: jmax,kmax,lmax,start,finish,skip,size,jstart
       INTEGER :: jmax2,kmax2,mmax,amcount,process
       INTEGER :: count,j,k,l,m,i,m_return,sender,numargs
-      INTEGER :: numranks,mpierr,myrank
-      INTEGER :: status(MPI_STATUS_SIZE)
+      INTEGER :: numranks,mpierr,myrank,mpiter,fill
+      INTEGER :: status(MPI_STATUS_SIZE),package(2)
       REAL(DOUBLE),PARAMETER :: tconv = 1605.63
       REAL(DOUBLE),PARAMETER :: pi = 3.14159265358979323846d0
       REAL(DOUBLE),PARAMETER :: twopi = 2.d0*pi
@@ -31,7 +31,7 @@
          REAL(DOUBLE) :: a, amid
       end type answer_return
 
-      type (answer_return) answer
+      type (answer_return),ALLOCATABLE :: answers(:)
 
       numargs = IARGC()
 
@@ -66,7 +66,15 @@
       jmax2 = jmax+2
       kmax2 = kmax+2
       dphi  = twopi/lmax
-
+      
+      IF(mmax.ge.numranks-1) THEN
+         mpiter = (mmax/(numranks-1))+1
+         ALLOCATE(answers(mpiter))
+      ELSE
+         print*,"More MPI ranks than work, consider revising"
+         STOP
+      ENDIF
+         
       ALLOCATE(rho(jmax2,kmax2,lmax))
  
       avga(:,:)          = 0.d0
@@ -98,10 +106,15 @@
             CALL MPI_BCAST(RHO,JMAX2*KMAX2*LMAX,MPI_DOUBLE_PRECISION,&
                  0,MPI_COMM_WORLD,mpierr)
 
-            DO PROCESS=1,min(numranks-1,mmax)
-               CALL MPI_SEND(AMCOUNT,1,MPI_INTEGER,PROCESS,AMCOUNT,&
+            DO PROCESS=1,numranks-1
+               package(2) = AMCOUNT*mpiter
+               package(1) = package(2)-mpiter+1
+               CALL MPI_SEND(package,2,MPI_INTEGER,PROCESS,AMCOUNT,&
                     MPI_COMM_WORLD,mpierr)
                AMCOUNT = AMCOUNT+1
+               IF(package(2).ge.mmax)THEN
+                  EXIT
+               ENDIF
             ENDDO
 
 911         CONTINUE
@@ -131,25 +144,30 @@
                timearr(count) = time/tconv
             ENDIF
 
-            DO PROCESS=1,MMAX
-               call MPI_RECV(answer,2,MPI_DOUBLE_PRECISION,&
+            DO PROCESS=1,AMCOUNT-1
+               call MPI_RECV(answers,2*mpiter,MPI_DOUBLE_PRECISION,&
                     MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,status,&
                     mpierr)
                
                sender = status(MPI_SOURCE)
                m_return = status(MPI_TAG)
 
-               avga(m_return,count) = answer%a
-               avgamid(m_return,count) = answer%amid
+               package(2) = m_return*mpiter
+               package(1) = package(2)-mpiter+1
+
+               DO j=package(1),package(2)
+                  avga(j,count) = answers(j)%a
+                  avgamid(j,count) = answers(j)%amid
+               ENDDO
                
-               IF(AMCOUNT.le.MMAX) THEN
-                  call MPI_SEND(AMCOUNT,1,MPI_INTEGER,sender,AMCOUNT,&
-                       MPI_COMM_WORLD,mpierr)
-                  AMCOUNT = AMCOUNT+1
-               ELSE
-                  call MPI_SEND(MPI_BOTTOM,0,MPI_INTEGER,sender,MMAX+1,&
-                       MPI_COMM_WORLD,mpierr)
-               ENDIF
+!!$               IF(AMCOUNT.le.MMAX) THEN
+!!$                  call MPI_SEND(AMCOUNT,1,MPI_INTEGER,sender,AMCOUNT,&
+!!$                       MPI_COMM_WORLD,mpierr)
+!!$                  AMCOUNT = AMCOUNT+1
+!!$               ELSE
+!!$                  call MPI_SEND(MPI_BOTTOM,0,MPI_INTEGER,sender,MMAX+1,&
+!!$                       MPI_COMM_WORLD,mpierr)
+!!$               ENDIF
             ENDDO
          ENDDO
 
@@ -157,16 +175,16 @@
          do I=start,finish,skip
             CALL MPI_BCAST(RHO,JMAX2*KMAX2*LMAX,MPI_DOUBLE_PRECISION,&
                  0,MPI_COMM_WORLD,mpierr)
-            IF (myrank.lt.mmax) THEN
 
-300            CALL MPI_RECV(AMCOUNT,1,MPI_INTEGER,0,MPI_ANY_TAG,&
-                    MPI_COMM_WORLD,status,mpierr)
+300         CALL MPI_RECV(package,2,MPI_INTEGER,0,MPI_ANY_TAG,&
+                 MPI_COMM_WORLD,status,mpierr)
                
-               IF (status(MPI_TAG).eq.MMAX+1) go to 400
-
-               ALLOCATE(a0(jmax2,kmax2))
-               ALLOCATE(am(jmax2,kmax2))
-               ALLOCATE(bm(jmax2,kmax2))
+            ALLOCATE(a0(jmax2,kmax2))
+            ALLOCATE(am(jmax2,kmax2))
+            ALLOCATE(bm(jmax2,kmax2))
+            fill = 1
+            DO M = package(1),package(2)
+            
                am(:,:)        = 0.d0
                bm(:,:)        = 0.d0
                a0(:,:)        = 0.d0
@@ -181,9 +199,9 @@
                   DO k=2,kmax+1
                      DO j=jstart,jmax+1
                         am(j,k) = am(j,k)+rho(j,k,l)*&
-                             cos(amcount*phi)
+                             cos(m*phi)
                         bm(j,k) = bm(j,k)+rho(j,k,l)*&
-                             sin(amcount*phi)
+                             sin(m*phi)
                         a0(j,k) = a0(j,k)+rho(j,k,l)
                      ENDDO
                   ENDDO
@@ -200,7 +218,7 @@
                   ENDDO
                ENDDO
 !$OMP END PARALLEL DO
-               answer%a = tmpa*2.d0/a0tot
+               answers(fill)%a = tmpa*2.d0/a0tot
                tmpa = 0.d0
                a0tot = 0.d0
 !$OMP PARALLEL DO DEFAULT(SHARED)&
@@ -212,7 +230,9 @@
                ENDDO
 !$OMP END PARALLEL DO               
                   
-               answer%amid = tmpa*2.d0/a0tot
+               answers(fill)%amid = tmpa*2.d0/a0tot
+               fill = fill+1
+            ENDDO
 
 !                DO k=2,kmax+1
 !                   DO j=jstart,jmax+1
@@ -240,11 +260,10 @@
             DEALLOCATE(a0)
             DEALLOCATE(am)
             DEALLOCATE(bm)
-
-            CALL MPI_SEND(answer,2,MPI_DOUBLE_PRECISION,0,AMCOUNT,&
+            
+            AMCOUNT = status(MPI_TAG)
+            CALL MPI_SEND(answers,2*mpiter,MPI_DOUBLE_PRECISION,0,AMCOUNT,&
                  MPI_COMM_WORLD,mpierr)
-            GO TO 300
-         ENDIF
 400      CONTINUE
       ENDDO
    ENDIF
