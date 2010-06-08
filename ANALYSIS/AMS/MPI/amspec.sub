@@ -11,7 +11,7 @@
 cd $PBS_O_WORKDIR
 
 if (! -x amspec_mpi) then
-mpif90 -O3 -pad -align all -nocheck -ipo -no-prec-div -shared-intel -openmp -r8 -xHost -mcmodel=medium -convert big_endian -o amspec_mpi amspec_mpi.f90
+mpif90 -O3 -pad -align all -nocheck -ipo -no-prec-div -shared-intel -openmp -r8 -xHost -mcmodel=medium -convert native -o amspec_mpi amspec_mpi.f90
 endif
 
 if (! -x  launch.sh) then
