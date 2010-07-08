@@ -1,7 +1,7 @@
       subroutine init()
       
-      INCLUDE hydroparam.h
-      INCLUDE globals.h
+      INCLUDE 'hydroparam.h'
+      INCLUDE 'globals.h'
 
       INTEGER :: jreq
 
@@ -36,7 +36,7 @@
 
       return
 
-      end subroutine init()
+      end subroutine init
 
 ! Written by A. C. Boley (updated 12 June 2007).
 ! See Pathria for questions.  This uses E = NkT^2 d ln Z / d T to calculate internal energies.
@@ -50,7 +50,7 @@
         include 'hydroparam.h'
         include 'globals.h'
         
-        integer J,I
+        integer J,I,jreq
         
         real*8, parameter :: b = 85.4d0, vib = 5987.d0 ! see Draine et al. (1983)
         real*8 f1,f2,f3,f4,dummy0,dummy1
@@ -243,9 +243,12 @@
          include 'hydroparam.h'
          include 'globals.h'
         
-         integer J,K,L,I 
+         integer J,K,L,I ,jreq
          real*8 limiter
          real*8 eng,dummy
+         real*8 DTHETA, PI, GRAV, BGDEN
+         COMMON /BLOK6/DTHETA,PI,GRAV,BGDEN
+
 
          limiter = den*phylim 
 
