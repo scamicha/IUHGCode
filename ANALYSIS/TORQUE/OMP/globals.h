@@ -5,7 +5,7 @@ C
      &        cs_fc, omega_fc, tgrav, treyn,gt1,
      &        mass_fc,kepler_fc,rtv,oav,vrav, cs_sig
 
-      real(KIND=8) :: vphiav,econv,rdisk,mstar,kconst
+      real(KIND=8) :: vphiav,econv,rdisk,kconst
 
       real(KIND=8), dimension(JMAX2) :: masss,masse,mdot
 
@@ -13,11 +13,8 @@ C
      &        cs_fc, omega_fc, tgrav, treyn,
      &        mass_fc,kepler_fc,rtv,oav,vrav,
      &        cs_sig, masss,masse,mdot,
-     &        vphiav,econv,rdisk,mstar,kconst
+     &        vphiav,econv,rdisk,kconst
  
-
-      REAL*8 KONST,NPRIME,xn,gamma,toverw
-      COMMON /PTROPE/XN,GAMMA,KONST,NPRIME,TOVERW
 
       real*8 rcloud,constp,delt,bdytem,den,time,cormas,epscen
       COMMON /BLOK7/RCLOUD,CONSTP,DELT,BDYTEM,DEN,TIME,CORMAS,epscen 

@@ -16,8 +16,8 @@ C*******************************************************************************
      
       IMPLICIT real*8 (a-h,o-z)      
 
-      INCLUDE 'hydroparam.h'
       INCLUDE 'globals.h'
+      INCLUDE 'hydroparam.h'
 
 
       integer COUNTER
