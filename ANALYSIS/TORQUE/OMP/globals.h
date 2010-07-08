@@ -48,7 +48,7 @@ C
      &     P(JMAX2,KMAX2,LMAX),
      &     CV(JMAX2,KMAX2,LMAX),
      &     EPS(JMAX2,KMAX2,LMAX),
-     &     TEMPC(JMAX2,KMAX2,LMAX), ENON
+     &     TEMPC(JMAX2,KMAX2,LMAX)
 
 
       COMMON /POIS/
@@ -63,7 +63,7 @@ C
      &     Dconv,Pconv,sigma,rhoconv,engconv,bkmpcode
 
       real*8 r,z,rhf,zhf,rof3n,zof3n
-      COMMON /GRID/jreq,kzpol,
+      COMMON /GRID/jreq,
      &     R(pot3jmax2),
      &     Z(POT3KMAX2),
      &     RHF(POT3JMAX2),

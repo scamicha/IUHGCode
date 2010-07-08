@@ -1,10 +1,11 @@
       subroutine init()
-
+      
       INCLUDE hydroparam.h
       INCLUDE globals.h
 
+      INTEGER :: jreq
+
       Msyscgs=Mstar*Msuncgs*(1.0+(tmassini/(1.0-tmassini)))
-      mass_star = 1.d0-tmassini
       
       PKcgs = ( (Rdiskau*AUcgs/r(jreq))**(3.0-xn) * 
      &     Gcgs**xn * Msyscgs**(xn-1.0) )**(1.0/xn)

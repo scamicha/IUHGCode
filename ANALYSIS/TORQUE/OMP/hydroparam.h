@@ -41,7 +41,7 @@ C     The following parameters are for the EOS
       real*8, parameter :: gamma = 1.66666666666667d0,xn = 1.5d0
 !     PROBABLY DON'T CHANGE THESE
       real*8,PARAMETER :: Mstar=1.0,Rstar=2.0,Rdiskau=40.0,Tstar=4000.0
-      real*8,PARAMETER :: Msuncgs=1.989e33, Rsuncgs=6.96e10
+      real*8,PARAMETER :: Msuncgs=1.989e33, Rsuncgs=6.96e10, Tbgrnd=3.
       real*8,PARAMETER :: sigmacgs=5.670e-5, Gcgs=6.672e-8, phylim=1.e-8 
       real*8,PARAMETER :: bkmpcgs=8.254d7,gridlim=1.e-12, AUcgs=1.496e13
 
