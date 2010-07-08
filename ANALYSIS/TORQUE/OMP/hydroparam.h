@@ -68,5 +68,6 @@ c  Other parameters.
       parameter (hj=256,hk=256,hj1=hj+1,hk1=hk+1,hj2=hj+2,hk2=hk+2)
       parameter (lrlmax=64,lrjmax=32,lrkmax=8,lrjmax1=lrjmax+1)
       parameter (itable=100)
+      INTEGER, PARAMETER :: TTABLE=400
 
 

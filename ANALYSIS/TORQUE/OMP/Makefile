@@ -4,11 +4,11 @@
  MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -mtune=core2 -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -axsse3 -mcmodel=medium -convert big_endian
 
  OMPF95     = ifort
 
- F90FLAGS   = -O3 -pad -align all -nocheck -shared-intel -openmp -fixed
+ F90FLAGS   = -O3 -pad -align all -ipo -no-prec-div -nocheck -shared-intel -openmp -fixed
 
  LIBS       = $(F90FLAGS) $(TARCH)
 

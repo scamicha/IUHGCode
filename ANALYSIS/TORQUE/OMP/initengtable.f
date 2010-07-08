@@ -1,7 +1,7 @@
       subroutine init()
 
-      INCLUDE globals.h
       INCLUDE hydroparam.h
+      INCLUDE globals.h
 
       Msyscgs=Mstar*Msuncgs*(1.0+(tmassini/(1.0-tmassini)))
       mass_star = 1.d0-tmassini

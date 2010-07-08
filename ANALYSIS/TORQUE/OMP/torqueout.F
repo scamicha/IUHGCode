@@ -12,7 +12,8 @@
 
       real(KIND=8) :: 
      &  kephi,dummy0,dummy1,dummy2,rconv, vconv, limiter,tc,
-     &  deriv,eta, dummy, dummy3, dummy4, dummy5, dummy6,timediff
+     &  deriv,eta, dummy, dummy3, dummy4, dummy5, dummy6,timediff,
+     &  mtot
 
       real(KIND=8), save :: times
       real*8 DTHETA, PI, GRAV, BGDEN
@@ -129,7 +130,7 @@ C$OMP END DO
                   sigma_2d(J,L) =  sigma_2d(J,L) + 
      &                 (rhosave(J,K,L)+rhosave(J-1,K,L))*zof3n
 
-                  dummy6 = dummy6+0.5d0(gamma1(J,K,L)+gamma1(J-1,K,L))* 
+                  dummy6 = dummy6+0.5d0*(gamma1(J,K,L)+gamma1(J-1,K,L))*
      &                 (p(J,K,L)+p(J-1,K,L))*zof3n
 
                   if ( 0.5d0*( rhosave(J,K,L) + rhosave(J-1,K,L) ) >= 
@@ -142,7 +143,7 @@ C$OMP END DO
 
                enddo
 
-               dummy1 = dummy1 + sqrt( 0.25d0(gamma1(J,K,L)+
+               dummy1 = dummy1 + sqrt( 0.25d0*(gamma1(J,K,L)+
      &              gamma1(J-1,K,L))*(p(J,K,L)+p(J-1,K,L)) )
 
                dummy2 = dummy2 + ( a(J,2,L) + a(J-1,2,L) ) / 
