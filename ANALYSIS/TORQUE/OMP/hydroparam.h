@@ -1,3 +1,4 @@
+c-*-fortran-*- 
 c     This file includes the parameter statements for the 3dhyd.f code.
 c     These can be modified as necessary to run different sized grids;
 c     however, parameters starting with 'pot3' must be powers of 2.
@@ -22,6 +23,29 @@ C     outdir the directory where outfile will be written
       parameter (outdir  = './')
       parameter (outfile = 'torquedecompP0.5dat.MPI.')
 
+C     The following parameters are for the EOS
+!    Use H2STAT to select what type of mixture you want.
+!    0 = pure para
+!    1 = pure ortho -- this is not really physical for astro applications
+!    2 = set mixture
+!    3 = equilibrium
+!    4 = single gamma law
+!    Be sure to set ac and bc for mixture (ac: para component, bc: ortho component)
+!    also pick a metallicity by adjusting xabun, yabun, and zabun.
+!    please make sure you use the same values from the hydro run!!!
+
+!     CHANGE THESE
+      integer,parameter :: H2STAT=2
+      real*8, parameter :: ac = 1.d0, bc = 3.d0
+      real*8, parameter :: xabun = .73d0,yabun=.25d0,zabun=.02d0
+      real*8, parameter :: gamma = 1.66666666666667d0,xn = 1.5d0
+!     PROBABLY DON'T CHANGE THESE
+      real*8,PARAMETER :: Mstar=1.0,Rstar=2.0,Rdiskau=40.0,Tstar=4000.0
+      real*8,PARAMETER :: Msuncgs=1.989e33, Rsuncgs=6.96e10, Tbgrnd=3.
+      real*8,PARAMETER :: sigmacgs=5.670e-5, Gcgs=6.672e-8, phylim=1.e-8 
+      real*8,PARAMETER :: bkmpcgs=8.254d7,gridlim=1.e-12, AUcgs=1.496e13
+
+
 C     ISTART is the first file IEND the last one, and ISKIP the interval
 C     between saved files. Also make sure to set JMAX, KMAX, and LMAX 
 C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
@@ -44,5 +68,6 @@ c  Other parameters.
       parameter (hj=256,hk=256,hj1=hj+1,hk1=hk+1,hj2=hj+2,hk2=hk+2)
       parameter (lrlmax=64,lrjmax=32,lrkmax=8,lrjmax1=lrjmax+1)
       parameter (itable=100)
+      INTEGER, PARAMETER :: TTABLE=400
 
 

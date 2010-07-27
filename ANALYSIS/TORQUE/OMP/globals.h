@@ -1,11 +1,11 @@
-!-*-f90-*-
+!-*-fortran-*-
 C***********************************************************************
 C     
       real(KIND=8), dimension(JMAX2)    :: sigma_fc,
      &        cs_fc, omega_fc, tgrav, treyn,gt1,
      &        mass_fc,kepler_fc,rtv,oav,vrav, cs_sig
 
-      real(KIND=8) :: vphiav,econv,rdisk,mstar,kconst
+      real(KIND=8) :: vphiav,econv,rdisk,kconst
 
       real(KIND=8), dimension(JMAX2) :: masss,masse,mdot
 
@@ -13,11 +13,8 @@ C
      &        cs_fc, omega_fc, tgrav, treyn,
      &        mass_fc,kepler_fc,rtv,oav,vrav,
      &        cs_sig, masss,masse,mdot,
-     &        vphiav,econv,rdisk,mstar,kconst
+     &        vphiav,econv,rdisk,kconst
  
-
-      REAL*8 KONST,NPRIME,xn,gamma,toverw
-      COMMON /PTROPE/XN,GAMMA,KONST,NPRIME,TOVERW
 
       real*8 rcloud,constp,delt,bdytem,den,time,cormas,epscen
       COMMON /BLOK7/RCLOUD,CONSTP,DELT,BDYTEM,DEN,TIME,CORMAS,epscen 
@@ -51,7 +48,7 @@ C
      &     P(JMAX2,KMAX2,LMAX),
      &     CV(JMAX2,KMAX2,LMAX),
      &     EPS(JMAX2,KMAX2,LMAX),
-     &     TEMPC(JMAX2,KMAX2,LMAX), ENON
+     &     TEMPC(JMAX2,KMAX2,LMAX)
 
 
       COMMON /POIS/
@@ -59,25 +56,29 @@ C
      &     RHO(JMAX2,KMAX2,LMAX),
      &     RHOSAVE(JMAX2,KMAX2,LMAX)
 
-
-c     COMMON /INSIDE/TMASS,ENEW,ELOST,EDIF,PHICHK,KLOCAT
-c     COMMON /TIMEST/INDX,ISOADI,ALLOW,DMAX,CHGMAX
-c     COMMON /COEFS/COEF(POT3JMAX2,POT3KMAX2,LMAX2,2)
-c     COMMON /LIMIT/SOUND
-c     COMMON /ITS/ITSTRT,ITSTOP,ITSTEP
-
-      real*8 Msyscgs,PKcgs,Tconv,Sconv,Dconv,Pconv,sigma
+      real*8 Msyscgs,PKcgs,Tconv,Sconv,Dconv,Pconv,sigma,
+     &     rhoconv,engconv,bkmpcode
       COMMON /CONVERT/
      &     Msyscgs,PKcgs,Tconv,Sconv,
-     &     Dconv,Pconv,sigma   
+     &     Dconv,Pconv,sigma,rhoconv,engconv,bkmpcode
 
       real*8 r,z,rhf,zhf,rof3n,zof3n
-      COMMON /GRID/jreq,kzpol,
+      COMMON /GRID/jreq,
      &     R(pot3jmax2),
      &     Z(POT3KMAX2),
      &     RHF(POT3JMAX2),
      &     ZHF(POT3KMAX2),
      &     ROF3N,ZOF3N
+
+      real*8 :: temptable,engtable,gammatable,muc
+      common /engtables/temptable(TTABLE),engtable(TTABLE),
+     &        gammatable(TTABLE),muc
+
+      real*8 etotfl, efl, eflufftot, gamma1
+      COMMON /etally/ etotfl, efl, eflufftot,gamma1(JMAX2,KMAX2,LMAX)
+
+      real*8 tempk
+      COMMON /COOLING/tempk(JMAX2,KMAX2,LMAX)
 
 C$OMP THREADPRIVATE(/GRID/)
       

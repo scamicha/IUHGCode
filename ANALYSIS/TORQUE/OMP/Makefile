@@ -1,14 +1,14 @@
-#-*-Makefile-*-
+# -*-Makefile-*-
 # makefile for the 3-D astrophysical hydrodynamics code.
 
  MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -g -r8 -mtune=core2 -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -axsse3 -mcmodel=medium -convert big_endian
 
- OMPF95     = ifort -openmp
+ OMPF95     = ifort
 
- F90FLAGS   = -O3 -pad -align all -nocheck -fast -shared-intel -fixed
+ F90FLAGS   = -O3 -pad -align all -ipo -no-prec-div -nocheck -shared-intel -openmp -fixed
 
  LIBS       = $(F90FLAGS) $(TARCH)
 
@@ -18,7 +18,7 @@
  .f.o:
 	$(OMPF95) $(F90FLAGS) -c $*.f
 
- OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o
+ OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o initengtable.o
 
 #===============================================================================
 #                        EXECUTABLES
@@ -53,4 +53,6 @@ torqueout.o: torqueout.F
 	$(FC) $(CFLAGS) -c $<
 
 boundary.o: boundary.f
+	$(FC) $(CFLAGS) -c $<
+initengtable.o: initengtable.f
 	$(FC) $(CFLAGS) -c $<
