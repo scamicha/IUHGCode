@@ -243,24 +243,29 @@ CSAM....Read a saved file to set up r and z grid
             tmassini = startup_array(4)
 
             IF (myrank.lt.LMAX/2+1) THEN
-CSAM....Set up grid    
-               DO j=1, JMAX2
-                  r(j)=(j-2)*ROF3N
-                  rhf(j) =((j-2)*ROF3N)+(ROF3N/2)
-               ENDDO
+CSAM....Set up grid  
+               IF (first_pass.eq.1) THEN
+                  DO j=1, JMAX2
+                     r(j)=(j-2)*ROF3N
+                     rhf(j) =((j-2)*ROF3N)+(ROF3N/2)
+                  ENDDO
             
-               DO k=1,KMAX2
-                  z(k) = (k-2)*ZOF3N
-                  zhf(k) = ((k-2)*ZOF3N)+(ZOF3N/2)
-               ENDDO
-               rholmt = den*1.d-12
+                  DO k=1,KMAX2
+                     z(k) = (k-2)*ZOF3N
+                     zhf(k) = ((k-2)*ZOF3N)+(ZOF3N/2)
+                  ENDDO
+                  rholmt = den*1.d-12
 
-               CALL SETBDY(0,ISYM)
+                  CALL SETBDY(0,ISYM)
+                  CALL INIT()
+                  CALL INITENGTABLE()
+               ENDIF
+                  
 
  300           call MPI_RECV(AMCOUNT,1,MPI_INTEGER,0,MPI_ANY_TAG,
      &              MPI_COMM_WORLD,status,mpierr)
 
-!!!!!!!!!!!!!!!!!!!!!! work is done jump to end of loop
+!!!!!!!!!!!!!!!!!!!!!!work is done jump to end of loop
                IF(status(MPI_TAG).eq.LMAX2+1) go to 400
 
 !$OMP PARALLEL DO         

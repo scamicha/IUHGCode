@@ -23,16 +23,13 @@
       integer :: AMCOUNT,J, K, L, I,LM,LP,JREQ,TINITK,KZPOL,
      &           ENON,LMM,LPP,O,H
 
-      mstar  = 1.d0/(1.d0-tmassini)
-      rdisk  = 40.d0 
-      gamma  = 1.666666d0
-      Aomega = sqrt(6.67d-8*0.5d0*1.99d33)
+      mtot   = mstar/(1.d0-tmassini)
       
-      kconst = rdisk*mstar**(0.333333333333333)/(r(JREQ-2)*7.93d-3)
-      econv = 2.24d48*mstar**(7.d0/3.d0)/kconst
-      rconv = rdisk/r(JREQ-2)*1.49d13
-      tconv = 3.55d3/mstar*kconst**(1.5d0)
-      vconv = 3.34d2*mstar**(2.d0/3.d0)/sqrt(kconst)
+      kconst = rdiskau*mtot**(0.333333333333333)/(r(JREQ-2)*7.93d-3)
+      econv = 2.24d48*mtot**(7.d0/3.d0)/kconst
+      rconv = rdiskau/r(JREQ-2)*1.49d13
+      tconv = 3.55d3/mtot*kconst**(1.5d0)
+      vconv = 3.34d2*mtot**(2.d0/3.d0)/sqrt(kconst)
 !      print *, tconv
 
 

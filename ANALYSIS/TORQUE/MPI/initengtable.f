@@ -1,3 +1,43 @@
+      subroutine init()
+      
+      INCLUDE 'hydroparam.h'
+      INCLUDE 'globals.h'
+
+      INTEGER :: jreq
+
+      Msyscgs=Mstar*Msuncgs*(1.0+(tmassini/(1.0-tmassini)))
+      
+      PKcgs = ( (Rdiskau*AUcgs/r(jreq))**(3.0-xn) * 
+     &     Gcgs**xn * Msyscgs**(xn-1.0) )**(1.0/xn)
+      
+      sigma = (sigmacgs/(bkmpcgs**4)) * 
+     &     ( Gcgs**(15.0/2.0 - 3.0*xn) * 
+     &     Msyscgs**(5.0 - 2.0*xn) * PKcgs**(xn/2.0)
+     &     )**(1.0/(3.0-xn)) 
+      
+      Tconv = (1.0/bkmpcgs) *( Gcgs**3 * Msyscgs**2 * PKcgs**(-xn)
+     &     )**(1.0/(3.0-xn))
+      
+      Sconv = (Gcgs**(2.0*xn) * Msyscgs**(1.0+xn) * PKcgs**(-2
+     &     .0*xn))**(1.0/(3.0-xn))
+      
+      Pconv = (Gcgs**(3.0+3.0*xn) * Msyscgs**(2.0+2.0*xn) * PKcgs**(-4
+     &     .0*xn))**(1.0/(3.0-xn))
+
+      Dconv = (Gcgs**(-xn) * Msyscgs**(1.0-xn) * PKcgs**(xn))**(1.0/(3.0
+     &     -xn))
+
+      rhoconv = (Gcgs**3*Msyscgs**2*PKcgs**(-3))
+     &        **(1.d0/(3.d0*gamma-4.d0))
+
+      engconv = pconv/rhoconv
+
+      bkmpcode = 1.d0
+
+      return
+
+      end subroutine init
+
 ! Written by A. C. Boley (updated 12 June 2007).
 ! See Pathria for questions.  This uses E = NkT^2 d ln Z / d T to calculate internal energies.
 ! However, the zero point energies are subtracted out (relevant for orthohydrogen
@@ -9,9 +49,8 @@
         implicit none
         include 'hydroparam.h'
         include 'globals.h'
-        include 'units.h'
         
-        integer J,I
+        integer J,I,jreq
         
         real*8, parameter :: b = 85.4d0, vib = 5987.d0 ! see Draine et al. (1983)
         real*8 f1,f2,f3,f4,dummy0,dummy1
@@ -195,4 +234,138 @@
 
       end subroutine Initengtable
 
+      subroutine TempFind() ! ACB find the temperature based on the energy/particle 
+                            ! temperature relation. The temperature is interpolated
+                            ! from the temperature table temptable, which is 
+                            ! calculated in setup based on X, Y, Z composition
+                            ! and other assumptions.
+         implicit none
+         include 'hydroparam.h'
+         include 'globals.h'
+        
+         integer J,K,L,I ,jreq
+         real*8 limiter
+         real*8 eng,dummy
+         real*8 DTHETA, PI, GRAV, BGDEN
+         COMMON /BLOK6/DTHETA,PI,GRAV,BGDEN
 
+
+         limiter = den*phylim 
+
+!$OMP DO SCHEDULE(STATIC) REDUCTION(+:eflufftot)
+         do L = 1, LMAX
+           do K = 1, KMAX2
+             do J = 1, JMAX2
+
+               eng = 0.d0
+            
+               if (rho(J,K,L) >= limiter) then
+
+                 eng = eps(J,K,L)/rho(J,K,L)*engconv
+
+                 if (eng < engtable(1)) then
+
+                   tempk(J,K,L) = temptable(1)/engtable(1)*eng
+                   eps(J,K,L) = engtable(1)/engconv*rho(J,K,L)
+
+                   I = 2
+
+                   gamma1(J,K,L) = gammatable(I-1) +
+     & (gammatable(I)-gammatable(I-1))/(temptable(I)-temptable(I-1))
+     & * (tempk(J,K,L)-temptable(I-1))
+
+                 else
+
+                   I = 2
+                   do while ( engtable(I) < eng .and. I < TTABLE )
+                    I = I+1
+                   enddo
+
+                   tempk(J,K,L) = temptable(I-1) +
+     & (temptable(I)-temptable(I-1))/(engtable(I)-engtable(I-1))*
+     & (eng - engtable(I-1))
+
+                   gamma1(J,K,L) = gammatable(I-1) +
+     & (gammatable(I)-gammatable(I-1))/(temptable(I)-temptable(I-1))
+     & * (tempk(J,K,L)-temptable(I-1))
+
+
+                 endif
+
+               else
+
+                 I = 2
+                 do while ( temptable(I) < tbgrnd .and. I < TTABLE )
+                  I = I+1
+                 enddo
+
+                 tempk(J,K,L) = tbgrnd
+
+                 dummy   = engtable(I-1) + (engtable(I)-engtable(I-1))
+     &                   / (temptable(I)-temptable(I-1))
+     &                   * (tbgrnd-temptable(I-1))
+
+                 dummy   = dummy*rho(J,K,L)*rhoconv/pconv
+
+                 eflufftot = eflufftot + (eps(J,K,L)-dummy)*rhf(J)
+     &                     * rof3n*dtheta*zof3n
+                 eps(J,K,L) = dummy
+
+                 gamma1(J,K,L) = gammatable(I-1) +
+     & (gammatable(I)-gammatable(I-1))/(temptable(I)-temptable(I-1))
+     & * (tempk(J,K,L)-temptable(I-1))
+
+
+               endif
+
+             enddo
+           enddo
+         enddo
+!$OMP END DO
+
+      return
+
+      end subroutine TempFind
+
+      subroutine TempFindSpec(eps,rho,temp)! like TempFind, but for a single cell. 
+
+         implicit none
+
+         include 'hydroparam.h'
+
+         integer I
+         real*8 eng,eps,rho,temp
+         real*8 Msyscgs,PKcgs,Tconv,Sconv,Dconv,Pconv,sigma,rhoconv,
+     &       engconv,bkmpcode
+          COMMON /CONVERT/
+     &     Msyscgs,PKcgs,Tconv,Sconv,
+     &     Dconv,Pconv,sigma,rhoconv,engconv,bkmpcode
+         real*8 :: temptable,engtable,gammatable,muc
+         common /engtables/temptable(TTABLE),engtable(TTABLE),
+     &           gammatable(TTABLE),muc
+
+
+
+         eng = eps/rho*engconv
+
+         if (eng < engtable(1)) then
+
+            temp = temptable(1)/engtable(1)*eng
+            eps = engtable(1)/engconv*rho
+
+         else
+
+            I = 2
+            do while ( engtable(I) < eng .and. I < TTABLE )
+              I = I+1
+            enddo
+
+            temp = temptable(I-1) +
+     & (temptable(I)-temptable(I-1))/(engtable(I)-engtable(I-1))*
+     & (eng - engtable(I-1))
+
+         endif
+
+      return
+
+      end subroutine TempFindSpec
