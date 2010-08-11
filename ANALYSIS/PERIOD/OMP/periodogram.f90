@@ -4,17 +4,19 @@ PROGRAM PERIODOGRAM
   integer, parameter :: double = selected_real_kind(15,300)
   integer :: jmax, kmax, lmax, jreq, istart, iend, iskip, numargs
   integer :: jmax2, kmax2, lmax2,modes,numfiles,jreq,fileiter
+  integer :: j,k,l,i,m,tstartind,tendind
+  REAL(DOUBLE), PARAMETER :: torp = 1605.63
+  REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
+  REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   real(double) :: ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,OMMAX,tmassini
-  real(double) :: dr,pi,torp,aujreq
+  real(double) :: dr,pi,torp,aujreq,tstart,tend
   real(double),dimension(:,:,:),allocatable :: rho,s,t,a,eps,omega
-  real(double),dimesion(:,:,:),allocatable :: amplitude,angle
-  real(double),dimension(:),allocatable :: omegavg,kappa,massum,timearr
+  real(double),dimesion(:,:,:),allocatable :: angle,angsub
+  real(double),dimension(:),allocatable :: omegavg,kappa,massum,timearr,am,bm,tsub
+  real(double),dimension(:,:),allocatable :: rhomid
   character :: rhodir*80, savedir*80,rhofile*94,savedfile*94
   character :: jmaxin*8,kmaxin*8,lmaxin*8,istartin*8,iendin*8,iskipin*8,modein*8
-  character :: filenum*8,aujreqin*10
-
-  pi = ACOS(-1.d0)
-  torp = 1605.63
+  character :: filenum*8,aujreqin*10,tstartin*8,tendin*8
 
   numargs = IARGC()
 
@@ -30,10 +32,12 @@ PROGRAM PERIODOGRAM
   call getarg(5,istartin)
   call getarg(6,iendin)
   call getarg(7,iskipin)
-  call getarg(8,aujreqin)
-  call getarg(9,outfile)
-  call getarg(10,rhodir)
-  call getarg(11,savedir)
+  call getarg(8,tstartin)
+  call getarg(9,tendin)
+  call getarg(10,aujreqin)
+  call getarg(11,outfile)
+  call getarg(12,rhodir)
+  call getarg(13,savedir)
   read(jmaxin,*)jmax
   read(kmaxin,*)kmax
   read(lmaxin,*)lmax
@@ -42,6 +46,8 @@ PROGRAM PERIODOGRAM
   read(iendin,*)iend
   read(iskipin,*)iskip
   read(aujreqin,*)aujreq
+  read(tstartin,*)tstart
+  read(tendin,*)tend
 
   numfiles = ((iend-istart)/iskip)+1
   jmax1 = jmax+1
@@ -52,6 +58,7 @@ PROGRAM PERIODOGRAM
 
   allocate(timearr(numfiles))
   allocate(rho(jmax2,kmax2,lmax))
+  allocate(rhomid(jmax2,lmax))
   allocate(s(jmax2,kmax2,lmax))
   allocate(t(jmax2,kmax2,lmax))
   allocate(a(jmax2,kmax2,lmax))
@@ -60,7 +67,6 @@ PROGRAM PERIODOGRAM
   allocate(omegavg(jmax2))
   allocate(kappa(jmax2))
   allocate(massum(jmax2))
-  allocate(amplitude(jmax2,modes,numfiles))
   allocate(angle(jmax2,modes,numfiles))
 
   write (filenum,'(I8.8)')iend
@@ -130,77 +136,196 @@ PROGRAM PERIODOGRAM
      READ(8) time
      CLOSE(8)
      timearr(I)=time
-     CALL GlobalCoef(rho,I,jmax,lmax,modes,amplitude,angle)
+!$OMP PARALLEL DO 
+     DO L=1,LMAX
+        DO J=1,JMAX2
+           rhomid(J,L) = rho(J,2,L)
+        ENDDO
+     ENDDO
+!OMP END PARALLEL DO
+
+
+!...   COMPUTE PHASE ANGLES
+!OMP PARALLEL DO DEFAULT(SHARED) &
+!OMP PRIVATE(am,bm,phi,j,l)
+
+     DO m = 1,modes
+        allocate(am(jmax2))
+        allocate(bm(jmax2))
+        am(:)   = 0.d0
+        bm(:)   = 0.d0
+        DO j = 2,jmax+1
+           DO l=1,lmax
+              phi = twopi*dble(l)/dble(lmax)
+              am(j) = am(j)+rhomid(j,l)*cos(dble(m)*phi)
+              bm(j) = bm(j)+rhomid(j,l)*sin(dble(m)*phi)
+           ENDDO
+           angle(J,M,I) = atan2(am(J),bm(J))+pi
+        ENDDO
+        deallocate(am)
+        deallocate(bm)
+     ENDDO
+!OMP END PARALLEL DO
   ENDDO
 
+!...    Extract time interval
+
+  I = 1
+  DO WHILE (timearr(I).lt.(tstart*torp))
+     I = I+1
+  ENDDO
   
-     
-subroutine GlobalCoef(rho,I,JMAX,LMAX,MMAX,cn_amp,cn_ang)
-  implicit none
-  integer, parameter :: double = selected_real_kind(15,300)
+  tstartind = I
 
-  real(double), dimension(:,:,:) :: rho
-  real(double), allocatable, dimension(:,:)   :: an,bn
-  real(double), allocatable, dimension(:)     :: rho0
-  real(double), dimension(:,:,:) :: cn_amp,cn_ang
-  real(double) :: angle, pi
+  DO WHILE (timearr(I).lt.(tend*torp))
+     I = I+1
+  ENDDO
 
-  integer :: J, K, L, JMAX, LMAX
-  integer :: N, I,MMAX
+  tendind = I
+  
+  allocate(tsub(tendind-tstartind))
+  allocate(angsub(jmax2,modes,tendind-tstartind))
 
-! begin I/O
+  DO I = tstartind,tendind
+     tsub(I+1-tstartind)=timearr(I)
+     DO J=1,JMAX2
+        DO M=1,modes
+           angsub(J,M,I+1-tstartind)=angle(J,M,I)
+        ENDDO
+     ENDDO
+  ENDDO
 
-  pi = acos(-1.d0)
+  DO M=1,modes
+     DO J=2,JMAX+1
+        
 
-! allocate variables
-  allocate(  an(JMAX+2,0:LMAX/2)               )
-  allocate(  bn(JMAX+2,0:LMAX/2)               )
-  allocate(rho0(JMAX+2)                      )
-       
-!$OMP PARALLEL
+  
+!...    Subroutine uses periodogram technique for generating
+!...    power spectra (see references below).  The Power Spectra are
+!...    plotted in the frequency-radius.  The spectra can be added into
+!...    one curve for OMPAT extraction.  Note that OMPAT=2pi/PPAT.
 
-!$OMP DO DEFAULT(SHARED) REDUCTION(+:rho0)
-     do J = 2, JMAX+1
-        rho0(J) = 0.d0
-        do L = 1, LMAX
-           
-           rho0(J) = rho0(J) + rho(J,2,L)
+END PROGRAM PERIODOGRAM
 
-        enddo
-     enddo
-!$OMP ENDDO
+SUBROUTINE PERIOD(
 
-     rho0 = rho0/dble(LMAX)
-     
-!$OMP DO DEFAULT(SHARED) PRIVATE(angle) FIRSTPRIVATE(pi) REDUCTION(+:an,bn)
-     do J = 2, JMAX+1
-        an(J,0) = rho0*dble(LMAX)
-        do N = 1, MMAX
-           an(J,N) = 0.d0
-           bn(J,N) = 0.d0
-           cn_amp(J,N,I) = 0.d0
-           do L = 1, LMAX
-              angle = (dble(L))/(LMAX)*2.d0*pi
-              an(J,N) = an(J,N) + rho(J,0,L)*cos(dble(N)*angle)
-              bn(J,N) = bn(J,N) + rho(J,0,L)*sin(dble(N)*angle)            
-           enddo
+PRO slowperiod
 
-           an(J,N) = an(J,N)/(dble(LMAX))
-           bn(J,N) = bn(J,N)/(dble(LMAX))
-           
-! compute the amplitude
-           cn_amp(J,N,I) = 2.d0*sqrt(an(J,N)**2+bn(J,N)**2)/rho0(J)
-! compute the phase angle
-           cn_ang(J,N,I) = atan2(an(J,N),bn(J,N))+pi
+TWOPI = 6.283185307179586476d0
 
-        enddo
-     enddo
-!$OMP ENDDO
 
-!$OMP END PARALLEL
+MAXSIZE = 500000L
 
-  deallocate(rho0)
-  deallocate(an)
-  deallocate(bn)
-  RETURN
-END subroutine Globalcoef
+mintime    = 12.03d0
+maxtime    = 19.57d0
+str =''
+timestring = ''
+stepdum   = 0L
+starcount = 0L
+percount  = 0L
+macc      = 4L
+ofac      = 4L
+hifac     = 0.5d0
+xdum      = 0.d0
+ydum      = 0.d0
+rdum      = 0.d0
+timedum   = 0.d0
+angdum    = 0.d0
+dz        = 0.202180656d0
+mratio    = 8.075411422d0
+pi        = 3.1415926353892d0
+maxx      = 0.d0
+minx      = 0.d0
+maxy      = 0.d0
+miny      = 0.d0
+maxr      = 0.d0
+
+stepcom = LONARR(MAXSIZE)
+xcom    = DBLARR(MAXSIZE)
+ycom    = DBLARR(MAXSIZE)
+rcom    = DBLARR(MAXSIZE)
+timecom = DBLARR(MAXSIZE)
+angcom  = DBLARR(MAXSIZE)
+
+tconv   = 1605.63d0
+
+openr,lun1,"comfile50.dat",/GET_LUN
+
+ WHILE NOT EOF(lun1) DO BEGIN
+     READF,lun1,str,FORMAT='(A256)'
+     READS,str,stepdum,timedum,xdum,ydum,rdum,angdum
+     stepcom(starcount)=stepdum
+     rcom(starcount) = rdum
+     xcom(starcount) = xdum 
+     ycom(starcount) = ydum
+     timecom(starcount)=timedum
+     angcom(starcount)=angdum
+     starcount++
+ ENDWHILE
+
+ rcom    = rcom(0:starcount-1)
+ xcom    = xcom(0:starcount-1)
+ ycom    = ycom(0:starcount-1)
+ stepcom = stepcom(0:starcount-1)
+ timecom = timecom(0:starcount-1)
+ angcom  = angcom(0:starcount-1)
+ x       = timecom/tconv
+ y       = ycom
+ indexsub= WHERE((x gt mintime) and (x lt maxtime))
+ x       = x(indexsub)
+ y       = y(indexsub)
+n       = starcount 
+ wi      = DBLARR(n)
+ wpi     = DBLARR(n)
+ wpr     = DBLARR(n)
+ wr      = DBLARR(n)
+ nout    = LONG(0.5*ofac*hifac*n) 
+ px      = DBLARR(nout)
+ py      = DBLARR(nout) 
+ ave     = MEAN(y,/DOUBLE)
+ var     = VARIANCE(y,/DOUBLE)
+ IF(var eq 0.d0) THEN BEGIN
+     print,"Error: zero variance in period"
+     RETURN
+ ENDIF
+
+ xmax   = MAX(x,MIN=xmin)
+ xdif   = xmax-xmin
+ xave   = 0.5d0*(xmax+xmin)
+ pymax  = 0.d0
+ jmax   = 0L
+ pnow   = 1.d0/(xdif*ofac)
+ arg    = TWOPI*((x-xave)*pnow)
+ wpr    = -2.d0*(sin(0.5d0*arg))^2.d0
+ wpi    = sin(arg)
+ wr     = cos(arg)
+ wi     = wpi
+ FOR i=0L,nout-1L DO BEGIN
+     px(i)  = pnow
+     sumsh  = TOTAL(wr*wi,/DOUBLE)
+     sumc   = TOTAL((wr-wi)*(wr+wi),/DOUBLE)
+     wtau   = 0.5d0*ATAN(2.d0*sumsh,sumc)
+     swtau  = SIN(wtau)
+     cwtau  = COS(wtau)
+     sums   = TOTAL(((wi*cwtau)-(wr*swtau))^2.d0,/DOUBLE)
+     sumc   = TOTAL(((wr*cwtau)+(wi*swtau))^2.d0,/DOUBLE)
+     yy     = y - ave
+     sumsy  = TOTAL(((wi*cwtau)-(wr*swtau))*yy,/DOUBLE)
+     sumcy  = TOTAL(((wr*cwtau)+(wi*swtau))*yy,/DOUBLE)
+     wtemp  = wr
+     wr     = ((wr*wpr)-(wi*wpi))+wr
+     wi     = ((wi*wpr)+(wtemp*wpi))+wi
+     py(i)  = 0.5d0*(sumcy*sumcy/sumc+sumsy*sumsy/sums)/var
+     IF (py(i) ge pymax) THEN BEGIN
+         pymax = py(i)
+         jmax  = i 
+     ENDIF
+     pnow += 1.d0/(ofac*xdif)
+ ENDFOR
+
+ expy  = exp(-pymax)
+ effm  = 2.d0*nout/ofac
+ prob  = effm*expy
+ IF (prob gt 0.01d0) THEN prob = 1.d0 - (1.d0-expy)^effm
+
+ print, prob
