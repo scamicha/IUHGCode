@@ -4,18 +4,19 @@ PROGRAM PERIODOGRAM
   integer, parameter :: double = selected_real_kind(15,300)
   integer, parameter :: OFAC = 4, HIFAC = 2
   integer :: jmax, kmax, lmax, jreq, istart, iend, iskip, numargs
-  integer :: jmax2, kmax2, lmax2,modes,numfiles,jreq,fileiter
+  integer :: jmax2, kmax2, lmax2,modes,numfiles,fileiter
   integer :: j,k,l,i,m,tstartind,tendind,nout,nsub
+  integer :: jmax1,kmax1
   REAL(DOUBLE), PARAMETER :: torp = 1605.63
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   real(double) :: ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,OMMAX,tmassini
-  real(double) :: dr,pi,torp,aujreq,tstart,tend
+  real(double) :: dr,aujreq,tstart,tend,prob,phi
   real(double),dimension(:,:,:),allocatable :: rho,s,t,a,eps,omega
   real(double),dimension(:,:,:),allocatable :: angle,angsub,results,frequencies
   real(double),dimension(:),allocatable :: omegavg,kappa,massum,timearr,am,bm,tsub
-  real(double),dimension(:),allocatable :: X1,Y1,oneang
-  character :: rhodir*80, savedir*80,rhofile*94,savedfile*94
+  real(double),dimension(:),allocatable :: X1,Y1,oneang,r,rhf
+  character :: rhodir*80, savedir*80,rhofile*94,savedfile*94,outfile*80
   character :: jmaxin*8,kmaxin*8,lmaxin*8,istartin*8,iendin*8,iskipin*8,modein*8
   character :: filenum*8,aujreqin*10,tstartin*8,tendin*8
 
@@ -68,11 +69,13 @@ PROGRAM PERIODOGRAM
   allocate(kappa(jmax))
   allocate(massum(jmax2))
   allocate(angle(jmax2,modes,numfiles))
+  allocate(r(jmax2))
+  allocate(rhf(jmax2))
 
-  write (filenum,'(I8.8)')iend
+  write (filenum,'(I6.6)')iend
   savedfile=trim(savedir)//'saved.'//filenum
   OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',  &
-       STATUS="OLD",ERR=911)      
+       STATUS="OLD")      
   READ(8) S
   READ(8) T
   READ(8) A
@@ -101,7 +104,7 @@ PROGRAM PERIODOGRAM
   ENDDO
 !$OMP END DO
 
-!$OMP DO DEFAULT(SHARED) REDUCTION(+:omegavg,massum)
+!$OMP DO REDUCTION(+:omegavg,massum)
   DO J=2,jmax1
      omegavg(j-1) = 0.d0
      massum(j) = 0.d0
@@ -114,7 +117,7 @@ PROGRAM PERIODOGRAM
   ENDDO
 !$OMP END DO
      
-!$OMP DO DEFAULT(SHARED)
+!$OMP DO
   DO J=1,jmax
      omegavg(j) = omegavg(j)/massum(j)
      kappa(j) = sqrt(ABS(rhf(j)*omegavg(j)*(omegavg(j+1)- &
@@ -127,11 +130,11 @@ PROGRAM PERIODOGRAM
 !$OMP END PARALLEL
 
   DO I = 1,NUMFILES
-     fileiter = (I*stepskip)+stepbegin
-     write (filenum,'(I8.8)')fileiter
+     fileiter = ((I-1)*iskip)+istart
+     write (filenum,'(I6.6)')fileiter
      rhofile = trim(rhodir)//'rho3d.'//filenum
      OPEN(UNIT=8, FILE=trim(rhofile),FORM='UNFORMATTED',  &
-          STATUS='OLD',ERR=911)
+          STATUS='OLD')
      READ(8) RHO
      READ(8) time
      CLOSE(8)
@@ -235,13 +238,15 @@ END PROGRAM PERIODOGRAM
 SUBROUTINE FASPER(X,Y,N,OFAC,HIFAC,WK1R,WK2R,NOUT,PROB)
   IMPLICIT NONE
 
+  integer, parameter :: double = selected_real_kind(15,300)
   INTEGER, PARAMETER :: MACC=4
-  INTEGER :: NOUT,NFREQT,NFREQ,NDIM,FNDIM,J,K
+  INTEGER :: NOUT,NFREQT,NFREQ,NDIM,FNDIM,J,K,N
+  INTEGER :: OFAC,HIFAC
   REAL(DOUBLE) :: X(*),Y(*),WK1R(*),WK2R(*)
   REAL(DOUBLE),DIMENSION(:),allocatable :: wk1,wk2
   REAL(DOUBLE) :: AVE,VAR,XMIN,XMAX,FAC,CK,CKK,DF,PMAX
   REAL(DOUBLE) :: HYPO,HC2WT,HS2WT,CWT,SWT,DEN,CTERM
-  REAL(DOUBLE) :: STERM,EXPY,EFFM,PROB
+  REAL(DOUBLE) :: STERM,EXPY,EFFM,PROB,XDIF
 
   NFREQT = OFAC*HIFAC*N*MACC
   NFREQ = 64
@@ -252,16 +257,20 @@ SUBROUTINE FASPER(X,Y,N,OFAC,HIFAC,WK1R,WK2R,NOUT,PROB)
   allocate(wk1(NDIM))
   allocate(wk2(NDIM))
   CALL AVEVAR(Y,N,AVE,VAR)
-  XMIN = MIN(X)
-  XMAX = MAX(X)
+  XMIN=X(1)
+  XMAX=XMIN
+  DO J=1,N
+     IF(X(J).lt.XMIN)XMIN=X(J)
+     IF(X(J).gt.XMAX)XMAX=X(J)
+  ENDDO
   XDIF = XMAX - XMIN
   wk1(:) = 0.d0
   wk2(:) = 0.d0
   FAC = NDIM/(XDIF*OFAC)
   FNDIM = NDIM
   DO J=1,N
-     CK = 1.d0+DMOD((X(J)-XMIN)*FAC,FNDIM)
-     CKK = 1.d0+DMOD(2.d0*(CK-1.d0),FNDIM)
+     CK = 1.d0+DMOD((X(J)-XMIN)*FAC,dble(FNDIM))
+     CKK = 1.d0+DMOD(2.d0*(CK-1.d0),dble(FNDIM))
      CALL SPREAD(Y(J)-AVE,wk1,NDIM,CK,MACC)
      CALL SPREAD(1.d0,wk2,NDIM,CKK,MACC)
   ENDDO
@@ -301,6 +310,9 @@ END SUBROUTINE FASPER
 
 !...    Following routines from Numerical Recipes.
 SUBROUTINE FOUR1(data, nn)
+  IMPLICIT NONE  
+
+  integer, parameter :: double = selected_real_kind(15,300)
   INTEGER :: n,mmax,m,j,istep,i,nn
   REAL(DOUBLE) :: wtemp,wr,wpr,wpi,wi,theta,tempr,tempi
   REAL(DOUBLE) :: data(*)
@@ -332,7 +344,7 @@ SUBROUTINE FOUR1(data, nn)
      DO M=1,MMAX-1,2
         DO I=M,N,istep
            j = i + mmax
-           tempr = wr*data(j)-wi*data(j+1
+           tempr = wr*data(j)-wi*data(j+1)
            tempi = wr*data(j+1)+wi*data(j)
            data(j) = data(i)-tempr
            data(j+1) = data(i+1)-tempi
@@ -349,8 +361,10 @@ SUBROUTINE FOUR1(data, nn)
 END SUBROUTINE FOUR1
 
 SUBROUTINE REALFT(dataft,n)
+  IMPLICIT NONE
 
-  INTEGER :: i, i1,i2,i3,i4,np3,dum
+  integer, parameter :: double = selected_real_kind(15,300)
+  INTEGER :: i, i1,i2,i3,i4,np3,dum,n
   REAL :: c1=0.5,c2,h1r,h1i,h2r,h2i
   REAL(DOUBLE) :: wr,wi,wpr,wpi,wtemp,theta
   REAL(DOUBLE) :: dataft(*)
@@ -375,10 +389,10 @@ SUBROUTINE REALFT(dataft,n)
      h1i = c1*(dataft(i2)-dataft(i4))
      h2r = -c2*(dataft(i2)+dataft(i4))
      h2i = c2*(dataft(i1)-dataft(i3))
-     data(i1) = h1r+wr*h2r-wi*h2i
-     data(i2) = h1i+wr*h2i+wi*h2r
-     data(i3) = h1r-wr*h2r+wi*h2i
-     data(i1) = -h1i+wr*h2i+wi*h2r
+     dataft(i1) = h1r+wr*h2r-wi*h2i
+     dataft(i2) = h1i+wr*h2i+wi*h2r
+     dataft(i3) = h1r-wr*h2r+wi*h2i
+     dataft(i1) = -h1i+wr*h2i+wi*h2r
      wtemp = wr
      wr = wtemp*wpr-wi*wpi+wr
      wi = wi*wpr+wtemp*wpi+wi
@@ -391,10 +405,12 @@ END SUBROUTINE REALFT
   
 SUBROUTINE SPREAD(Y,YY,N,X,M)
   IMPLICIT NONE
-  REAL(DOUBLE) :: Y,X,fac
-  REAL(DOUBLE) :: Y(*)
-  INTEGER :: n,m,ix,ilo,ihi,nden,j
-  INTEGER,PARAMETER :: nfac(10) /1,1,2,6,24,120,720,5040,40320,362880/
+
+  integer, parameter :: double = selected_real_kind(15,300)
+  REAL(DOUBLE) :: Y,X,fac,nden
+  REAL(DOUBLE) :: YY(*)
+  INTEGER :: n,m,ix,ilo,ihi,j
+  INTEGER,dimension(10),parameter :: nfac=(/1,1,2,6,24,120,720,5040,40320,362880/)
   
   ix = int(x)
   if (x.eq.dble(ix)) THEN
@@ -402,7 +418,7 @@ SUBROUTINE SPREAD(Y,YY,N,X,M)
   ELSE
      ilo = MIN(MAX(int(x-0.5*m+1.0),1),n-m+1)
      ihi = ilo+m-1
-     nden = nfac(m)
+     nden = dble(nfac(m))
      fac = x-ilo
      DO J=ilo+1,IHI
         fac = fac*(x-j)
@@ -417,6 +433,9 @@ SUBROUTINE SPREAD(Y,YY,N,X,M)
 END SUBROUTINE SPREAD
      
 SUBROUTINE SWAP(A,B)
+  IMPLICIT NONE
+
+  integer, parameter :: double = selected_real_kind(15,300)
   REAL(DOUBLE) :: A,B,TMP
   TMP = A
   a = B
@@ -427,6 +446,7 @@ END SUBROUTINE SWAP
 SUBROUTINE AVEVAR(X,NUM,AVG,VAR)
   IMPLICIT NONE
   
+  integer, parameter :: double = selected_real_kind(15,300)
   INTEGER :: NUM, J
   REAL(DOUBLE) :: X(*)
   REAL(DOUBLE) :: AVG,VAR,S,EP
@@ -438,7 +458,7 @@ SUBROUTINE AVEVAR(X,NUM,AVG,VAR)
   AVG = AVG/NUM
   VAR = 0.d0
   EP  = 0.d0
-  DO J=1,N
+  DO J=1,NUM
      S = X(J)-AVG
      EP = EP + S
      VAR = VAR + S**2
