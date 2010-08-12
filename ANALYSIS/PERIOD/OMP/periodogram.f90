@@ -195,6 +195,7 @@ PROGRAM PERIODOGRAM
      print*,"!!!  This may adversely affect the   !!!"
      print*,"!!!  periodogram results             !!!"
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
+  ENDIF
 
   nsub = tendind - tstartind
 
