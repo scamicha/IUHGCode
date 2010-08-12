@@ -188,7 +188,17 @@ PROGRAM PERIODOGRAM
   ENDDO
 
   tendind = I
+  IF(tendind.eq.numfiles) THEN
+     print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
+     print*,"!!!  The end time specified in the   !!!"
+     print*,"!!!  interval is beyond the data set !!!"
+     print*,"!!!  This may adversely affect the   !!!"
+     print*,"!!!  periodogram results             !!!"
+     print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
+
   nsub = tendind - tstartind
+
+  print*,"NSUB = ",nsub
   
   allocate(tsub(nsub))
   allocate(angsub(jmax2,modes,nsub))
