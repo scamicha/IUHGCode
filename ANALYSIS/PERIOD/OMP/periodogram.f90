@@ -179,7 +179,7 @@ PROGRAM PERIODOGRAM
   
   tstartind = I
 
-  DO WHILE (timearr(I).lt.tend)
+  DO WHILE ((timearr(I).lt.tend).and.(I.lt.numfiles))
      I = I+1
   ENDDO
 
@@ -205,6 +205,7 @@ PROGRAM PERIODOGRAM
   allocate(results(JMAX,modes,nout))
   allocate(frequencies(JMAX,modes,nout))
 
+  print*,"about to call periodogram"
 !OMP PARALLEL DO DEFAULT(SHARED) &
 !OMP PRIVATE(oneang,J,I,X1,Y1,prob)
   DO M=1,modes
