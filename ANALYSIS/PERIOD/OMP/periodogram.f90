@@ -172,7 +172,7 @@ PROGRAM PERIODOGRAM
 
 !...    Extract time interval
 
-  I = 1
+  I = 0
   DO WHILE ((timearr(I).lt.tstart).and.(I.lt.numfiles))
      I = I+1
   ENDDO
@@ -195,10 +195,13 @@ PROGRAM PERIODOGRAM
      print*,"!!!  This may adversely affect the   !!!"
      print*,"!!!  periodogram results             !!!"
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
+  ENDIF
 
   nsub = tendind - tstartind
 
   print*,"NSUB = ",nsub
+  print*,"TSTARTIND = ",tstartind
+  print*,"TENDIND = ",tendind
   
   allocate(tsub(nsub))
   allocate(angsub(jmax2,modes,nsub))
