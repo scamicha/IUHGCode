@@ -133,11 +133,18 @@ PROGRAM PERIODOGRAM
      fileiter = ((I-1)*iskip)+istart
      write (filenum,'(I6.6)')fileiter
      rhofile = trim(rhodir)//'rho3d.'//filenum
+     
+     print*," PERIOD OUT -> OPENING FILE: ", rhofile
+     
      OPEN(UNIT=8, FILE=trim(rhofile),FORM='UNFORMATTED',  &
           STATUS='OLD')
      READ(8) RHO
      READ(8) time
      CLOSE(8)
+     
+     print*,' PERIOD OUT -> READ FILE: ',rhofile
+     print*,' PERIOD OUT -> AT TIME: ',time/torp,' ORPS'
+     
      timearr(I)=time/torp
 
 !...   COMPUTE PHASE ANGLES
