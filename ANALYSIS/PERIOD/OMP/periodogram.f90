@@ -173,11 +173,15 @@ PROGRAM PERIODOGRAM
 !...    Extract time interval
 
   I = 1
-  DO WHILE (timearr(I).lt.tstart)
+  DO WHILE ((timearr(I).lt.tstart).and.(I.lt.numfiles))
      I = I+1
   ENDDO
   
   tstartind = I
+  IF(tstartind.eq.numfiles) THEN
+     print*,"Beginning of interval is not in this data set"
+     STOP
+  ENDIF
 
   DO WHILE ((timearr(I).lt.tend).and.(I.lt.numfiles))
      I = I+1
