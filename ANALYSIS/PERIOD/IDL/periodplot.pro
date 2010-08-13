@@ -19,8 +19,8 @@ PRO PERIODPLOT
 
   openr,lun1,INFILE,/GET_LUN,/F77_UNFORMATTED
   readu,lun1,JMAX,MODES,NFREQ,TSTART,TEND,AUJREQ
-  values = DBLARR(JMAX,MODES,NOUT)
-  freqs  = DBLARR(JMAX,MODES,NOUT)
+  values = DBLARR(JMAX,MODES,NFREQ)
+  freqs  = DBLARR(JMAX,MODES,NFREQ)
   omega  = DBLARR(JMAX)
   kappa  = DBLARR(JMAX)
   rads   = DBLARR(JMAX)
@@ -30,7 +30,10 @@ PRO PERIODPLOT
   readu,lun1,omega
   readu,lun1,kappa
 
-  READ,MODENUM,PROMPT="There are ", MODES, " modes available. Please choose one to plot. "
+  titlestr  =  STRING('Periodogram Contour m=',modenum,'time=',tstart,'--',tend,' ORP',FORMAT='(A22,I2,A8,F5.2,A2,F5.2,A4)')
+  modestring = STRING('There are ', MODES, '  modes available. Please choose one to plot. ',FORMAT='(A,I2,A)')
+
+  READ,MODENUM,PROMPT=modestring
   IF ((MODENUM LT 1) OR (MODENUM GT MODES)) THEN BEGIN 
      PRINT, "You chose a mode outside the data set"
      STOP
@@ -78,4 +81,5 @@ PRO PERIODPLOT
      image=tvrd(true=3)
      write_jpeg,OUTFILE,image,QUALITY=100,TRUE=3
   ENDIF
-  
+
+END
