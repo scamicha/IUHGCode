@@ -152,8 +152,8 @@ PROGRAM PERIODOGRAM
      timearr(I)=time/torp
 
 !...   COMPUTE PHASE ANGLES
-!OMP PARALLEL DO DEFAULT(SHARED) &
-!OMP PRIVATE(am,bm,phi,j,l)
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(am,bm,phi,j,l)
 
      DO m = 1,modes
         allocate(am(jmax2))
@@ -171,7 +171,7 @@ PROGRAM PERIODOGRAM
         deallocate(am)
         deallocate(bm)
      ENDDO
-!OMP END PARALLEL DO
+!$OMP END PARALLEL DO
   ENDDO
 
 !...    Extract time interval
