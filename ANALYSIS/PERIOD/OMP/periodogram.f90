@@ -3,19 +3,19 @@ PROGRAM PERIODOGRAM
   implicit none
   integer, parameter :: double = selected_real_kind(15,300)
   integer, parameter :: OFAC = 4, HIFAC = 2
-  integer :: jmax, kmax, lmax, jreq, istart, iend, iskip, numargs
+  integer :: jmax, kmax, lmax, istart, iend, iskip, numargs
   integer :: jmax2, kmax2, lmax2,modes,numfiles,fileiter
   integer :: j,k,l,i,m,tstartind,tendind,nout,nsub
-  integer :: jmax1,kmax1
+  integer :: jmax1,kmax1,jreq
   REAL(DOUBLE), PARAMETER :: torp = 1605.63
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   real(double) :: ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,OMMAX,tmassini
-  real(double) :: dr,aujreq,tstart,tend,prob,phi
+  real(double) :: aujreq,tstart,tend,prob,phi,dr
   real(double),dimension(:,:,:),allocatable :: rho,s,t,a,eps,omega
   real(double),dimension(:,:,:),allocatable :: angle,angsub,results,frequencies
   real(double),dimension(:),allocatable :: omegavg,kappa,massum,timearr,am,bm,tsub
-  real(double),dimension(:),allocatable :: X1,Y1,oneang,r,rhf
+  real(double),dimension(:),allocatable :: X1,Y1,oneang,rhf
   character :: rhodir*80, savedir*80,rhofile*94,savedfile*94,outfile*80
   character :: jmaxin*8,kmaxin*8,lmaxin*8,istartin*8,iendin*8,iskipin*8,modein*8
   character :: filenum*8,aujreqin*10,tstartin*8,tendin*8
@@ -67,10 +67,9 @@ PROGRAM PERIODOGRAM
   allocate(omega(jmax2,kmax2,lmax))
   allocate(omegavg(jmax))
   allocate(kappa(jmax))
-  allocate(massum(jmax2))
+  allocate(massum(jmax))
   allocate(angle(jmax2,modes,numfiles))
-  allocate(r(jmax2))
-  allocate(rhf(jmax2))
+  allocate(rhf(jmax))
 
   write (filenum,'(I6.6)')iend
   savedfile=trim(savedir)//'saved.'//filenum
@@ -86,11 +85,10 @@ PROGRAM PERIODOGRAM
   CLOSE(8)
 
 !$OMP PARALLEL DEFAULT(SHARED)
-
+  dr = ROF3N
 !$OMP DO
-  DO j = 1,jmax2
-     r(j)   = (DBLE(J)-2.d0)*dr
-     rhf(j) = r(j)+(0.5d0*dr)
+  DO j = 2,jmax1
+     rhf(j-1) = (DBLE(J)-2.d0)*dr+(0.5d0*dr)
   ENDDO
 !$OMP END DO
 
@@ -107,24 +105,30 @@ PROGRAM PERIODOGRAM
 !$OMP DO REDUCTION(+:omegavg,massum)
   DO J=2,jmax1
      omegavg(j-1) = 0.d0
-     massum(j) = 0.d0
+     massum(j-1) = 0.d0
      DO k=1,kmax2
         DO l=1,lmax
            omegavg(j-1) = omegavg(j-1) + omega(j,k,l)
-           massum(j) = massum(j) + rho(j,k,l)
+           massum(j-1) = massum(j-1) + rho(j,k,l)
         ENDDO
      ENDDO
   ENDDO
 !$OMP END DO
-     
+
+  omegavg(1) = (omegavg(1)*torp)/(massum(1)*twopi)
+  kappa(1) = omegavg(1)
+  rhf(1) = rhf(1)*aujreq/rhf(JREQ)
+  omegavg(jmax) = (omegavg(jmax)*torp)/(massum(jmax)*twopi)
+  kappa(jmax) = omegavg(jmax)
+  rhf(jmax) = rhf(jmax)*aujreq/rhf(JREQ)
+
 !$OMP DO
-  DO J=1,jmax
+  DO J=2,jmax-1
      omegavg(j) = omegavg(j)/massum(j)
      kappa(j) = sqrt(ABS(rhf(j)*omegavg(j)*(omegavg(j+1)- &
-          omegavg(j-1))/dr + 4.d0*omegavg(j)**2))*(torp/(2.d0*pi))
-     omegavg(j) = omegavg(j)*(torp/(2.d0*pi))
-!!!!!!!!!!!!!!!!!!!!! If not needed put change rhf to AU here.........
-     
+          omegavg(j-1))/dr + 4.d0*omegavg(j)**2))*(torp/twopi)
+     omegavg(j) = omegavg(j)*(torp/twopi)
+     rhf(J) = rhf(J)*aujreq/rhf(JREQ)     
   ENDDO
 !$OMP END DO
 !$OMP END PARALLEL
@@ -187,7 +191,7 @@ PROGRAM PERIODOGRAM
      I = I+1
   ENDDO
 
-  tendind = I
+  tendind = I-1
   IF(tendind.eq.numfiles) THEN
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
      print*,"!!!  The end time specified in the   !!!"
@@ -197,26 +201,39 @@ PROGRAM PERIODOGRAM
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
   ENDIF
 
-  nsub = tendind - tstartind
+  nsub = tendind - tstartind + 1
 
   print*,"NSUB = ",nsub
   print*,"TSTARTIND = ",tstartind
   print*,"TENDIND = ",tendind
+  print*,"modes = ",modes
+  print*,"jmax2 = ",jmax2
   
   allocate(tsub(nsub))
   allocate(angsub(jmax2,modes,nsub))
 
-  DO I = tstartind,tendind
-!     tsub(I+1-tstartind)=timearr(I)
+  print*,"About to subsample angle"
+!$OMP PARALLEL DO PRIVATE(J,I)
+  DO M=1,modes
      DO J=1,JMAX2
-        DO M=1,modes
-!           angsub(J,M,I+1-tstartind)=angle(J,M,I)
+        DO I=tstartind,tendind
+           angsub(J,M,I+1-tstartind)=angle(J,M,I)
         ENDDO
      ENDDO
   ENDDO
+!$OMP END PARALLEL DO
+
+  print*,"About to subsample time array"
+!$OMP PARALLEL DO 
+  DO I = tstartind,tendind
+     tsub(I+1-tstartind)=timearr(I)
+  ENDDO
+!$OMP END PARALLEL DO
 
   nout = 0.5*OFAC*HIFAC*nsub
+
   print*"about to allocate"
+
   allocate(oneang(nsub))
   allocate(X1(nout))
   allocate(Y1(nout))
@@ -243,9 +260,10 @@ PROGRAM PERIODOGRAM
 !OMP END PARALLEL DO
 
   OPEN(UNIT=12,FILE=TRIM(outfile),FORM='UNFORMATTED')
-  WRITE(12) JMAX,modes,nout
+  WRITE(12) JMAX,modes,nout,tstart,tend,aujreq
   WRITE(12) results
   WRITE(12) frequencies
+  WRITE(12) rhf
   WRITE(12) omegavg
   WRITE(12) kappa
   CLOSE(12)
