@@ -187,7 +187,7 @@ PROGRAM PERIODOGRAM
      I = I+1
   ENDDO
 
-  tendind = I
+  tendind = I-1
   IF(tendind.eq.numfiles) THEN
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
      print*,"!!!  The end time specified in the   !!!"
@@ -197,25 +197,37 @@ PROGRAM PERIODOGRAM
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
   ENDIF
 
-  nsub = tendind - tstartind
+  nsub = tendind - tstartind + 1
 
   print*,"NSUB = ",nsub
   print*,"TSTARTIND = ",tstartind
   print*,"TENDIND = ",tendind
+  print*,"modes = ",modes
+  print*,"jmax2 = ",jmax2
   
   allocate(tsub(nsub))
   allocate(angsub(jmax2,modes,nsub))
 
-  DO I = tstartind,tendind
-     tsub(I+1-tstartind)=timearr(I)
+  print*,"About to subsample angle"
+!$OMP PARALLEL DO PRIVATE(J,I)
+  DO M=1,modes
      DO J=1,JMAX2
-        DO M=1,modes
+        DO I=tstartind,tendind
            angsub(J,M,I+1-tstartind)=angle(J,M,I)
         ENDDO
      ENDDO
   ENDDO
+!$OMP END PARALLEL DO
+
+  print*,"About to subsample time array"
+!$OMP PARALLEL DO 
+  DO I = tstartind,tendind
+     tsub(I+1-tstartind)=timearr(I)
+  ENDDO
+!$OMP END PARALLEL DO
 
   nout = 0.5*OFAC*HIFAC*nsub
+  print*,"about to allocate"
   allocate(oneang(nsub))
   allocate(X1(nout))
   allocate(Y1(nout))
@@ -242,7 +254,7 @@ PROGRAM PERIODOGRAM
 !OMP END PARALLEL DO
 
   OPEN(UNIT=12,FILE=TRIM(outfile),FORM='UNFORMATTED')
-  WRITE(12) JMAX,modes,nout
+  WRITE(12) JMAX,modes,nout,tstart,tend
   WRITE(12) results
   WRITE(12) frequencies
   WRITE(12) omegavg
