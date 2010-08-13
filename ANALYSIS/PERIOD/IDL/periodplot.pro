@@ -62,10 +62,10 @@ PRO PERIODPLOT
      DEVICE, DECOMPOSED=0
      window,0,xsize=640,ysize=640
 
-     CONTOUR,values,freqs,rads,YRANGE=YRANGE,LEVELS=LEVEL,       $
-             YSTYLE=1,TITLE=titlestr,color=0,background=255,     $
-             XTITLE='Pattern Speed (1/ORP)',YTITLE='R(AU)',      $
-             XRANGE=XRANGE,XSTYLE=1,/FILL
+     CONTOUR,values(*,MODENUM,*),freqs(2,MODENUM,*),rads,           $
+             YRANGE=YRANGE,LEVELS=LEVEL,YSTYLE=1,TITLE=titlestr,    $
+             color=0,background=255,XTITLE='Pattern Speed (1/ORP)', $
+             YTITLE='R(AU)',XRANGE=XRANGE,XSTYLE=1,/FILL
                       
      OPLOT,omega,rads,color=0
      OPLOT,omega+(kappa/DOUBLE(modenum)),rads,color=0
