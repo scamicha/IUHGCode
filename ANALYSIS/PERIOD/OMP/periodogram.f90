@@ -207,15 +207,16 @@ PROGRAM PERIODOGRAM
   allocate(angsub(jmax2,modes,nsub))
 
   DO I = tstartind,tendind
-     tsub(I+1-tstartind)=timearr(I)
+!     tsub(I+1-tstartind)=timearr(I)
      DO J=1,JMAX2
         DO M=1,modes
-           angsub(J,M,I+1-tstartind)=angle(J,M,I)
+!           angsub(J,M,I+1-tstartind)=angle(J,M,I)
         ENDDO
      ENDDO
   ENDDO
 
   nout = 0.5*OFAC*HIFAC*nsub
+  print*"about to allocate"
   allocate(oneang(nsub))
   allocate(X1(nout))
   allocate(Y1(nout))
