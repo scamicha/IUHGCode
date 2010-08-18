@@ -4,7 +4,7 @@
 #compiler. If you're using another compiler set 
 #OMP_STACKSIZE instead. Also, you should have a 
 #unlimited stack set in your .bashrc
-# compile main code with ifort -o period -fast -shared-intel -openmp periodogram.f90
+# compile main code with ifort -o period -fast -openmp periodogram.f90
 
 setenv OMP_NUM_THREADS 8
 setenv KMP_STACKSIZE 1G

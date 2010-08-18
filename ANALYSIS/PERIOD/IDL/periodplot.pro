@@ -1,5 +1,7 @@
 PRO PERIODPLOT
   JMAX   = 0L
+  I      = 0L
+  J      = 0L
   JREQ   = 242L
   AUJREQ = 0.d0
   MODES  = 0L
@@ -15,12 +17,12 @@ PRO PERIODPLOT
   YRANGE =  DBLARR(2)
   XRANGE =  DBLARR(2)
 
-  INFILE = 'period_indirect.dat'
+  INFILE = 'period_fort.dat'
 
   openr,lun1,INFILE,/GET_LUN,/F77_UNFORMATTED
   readu,lun1,JMAX,MODES,NFREQ,TSTART,TEND,AUJREQ
-  values = DBLARR(JMAX,MODES,NOUT)
-  freqs  = DBLARR(JMAX,MODES,NOUT)
+  values = DBLARR(JMAX,MODES,NFREQ)
+  freqs  = DBLARR(JMAX,MODES,NFREQ)
   omega  = DBLARR(JMAX)
   kappa  = DBLARR(JMAX)
   rads   = DBLARR(JMAX)
@@ -30,14 +32,31 @@ PRO PERIODPLOT
   readu,lun1,omega
   readu,lun1,kappa
 
-  READ,MODENUM,PROMPT="There are ", MODES, " modes available. Please choose one to plot. "
+  modestring = STRING('There are ', MODES,                             $
+                      '  modes available. Please choose one to plot. ',$
+                      FORMAT='(A,I2,A)')
+
+  READ,MODENUM,PROMPT=modestring
   IF ((MODENUM LT 1) OR (MODENUM GT MODES)) THEN BEGIN 
-     PRINT, "You chose a mode outside the data set"
-     STOP
+      PRINT, "You chose a mode outside the data set"
+      STOP
   ENDIF
 
-  VALMAX = MAX(values,MIN=VALMIN)
-  VALMID = MEDIAN(values,/EVEN)
+  freqplot = DBLARR(NFREQ)
+  freqplot = freqs(0,MODENUM-1,*)
+  valplot  = DBLARR(NFREQ,JMAX)
+  FOR I=0,JMAX-1 DO BEGIN
+      FOR J=0,NFREQ-1 DO BEGIN
+          valplot(J,I)  = values(I,MODENUM-1,J)
+      ENDFOR
+  ENDFOR
+
+
+  titlestr  =  STRING('Periodogram Contour m=',modenum,'time=',tstart, $
+                      '--',tend,' ORP',FORMAT='(A22,I2,A8,F5.2,A2,F5.2,A4)')
+  
+  VALMAX = MAX(valplot,MIN=VALMIN)
+  VALMID = MEDIAN(valplot,/EVEN)
   IF (VALMIN LE 1.e-5) THEN VALMIN = 1.e-5
 
   WHILE (CHLEV EQ 1) DO BEGIN
@@ -51,7 +70,7 @@ PRO PERIODPLOT
 
      LEVEL     =  INDGEN(256,/FLOAT)
      LEVEL     =  LEVEL/255.*(NUMLEV(1)-NUMLEV(0))+NUMLEV(0)
-     LOADCT, 43            
+     LOADCT, 42
 
      READ,XRANGE,PROMPT="Please enter Pattern range to plot: "
      READ,YRANGE,PROMPT="Please enter radius range to plot: "
@@ -59,10 +78,10 @@ PRO PERIODPLOT
      DEVICE, DECOMPOSED=0
      window,0,xsize=640,ysize=640
 
-     CONTOUR,values,freqs,rads,YRANGE=YRANGE,LEVELS=LEVEL,       $
-             YSTYLE=1,TITLE=titlestr,color=0,background=255,     $
-             XTITLE='Pattern Speed (1/ORP)',YTITLE='R(AU)',      $
-             XRANGE=XRANGE,XSTYLE=1,/FILL
+     CONTOUR,valplot,freqplot,rads,YRANGE=YRANGE,LEVELS=LEVEL,      $
+       YSTYLE=1,TITLE=titlestr,color=0,background=255,              $
+       XTITLE='Pattern Speed (1/ORP)',YTITLE='R(AU)',XRANGE=XRANGE, $
+       XSTYLE=1,/FILL
                       
      OPLOT,omega,rads,color=0
      OPLOT,omega+(kappa/DOUBLE(modenum)),rads,color=0
@@ -78,4 +97,5 @@ PRO PERIODPLOT
      image=tvrd(true=3)
      write_jpeg,OUTFILE,image,QUALITY=100,TRUE=3
   ENDIF
-  
+
+END

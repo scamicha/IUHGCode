@@ -258,13 +258,13 @@ PROGRAM PERIODOGRAM
   print*,"about to allocate"
 
 
-  allocate(X1(nout))
+!  allocate(X1(nout))
   allocate(results(JMAX,modes,2*nsub))
   allocate(frequencies(JMAX,modes,2*nsub))
 
   print*,"about to call periodogram"
 !$OMP PARALLEL DO DEFAULT(SHARED) &
-!$OMP PRIVATE(oneang,J,I,Y1,omin,delta,omax,ik)
+!$OMP PRIVATE(oneang,J,I,Y1,omin,omax,delta,ik)
   DO M=1,modes
      allocate(oneang(nsub))
      allocate(Y1(2*nsub))
@@ -335,17 +335,8 @@ SUBROUTINE PERIOD_ORIG(x,ti,nmax,omin,omax,delta,TORP,mode,ik,power)
   TWOPI = 2.d0*ACOS(-1.d0)
   PI = ACOS(-1.d0)
   
-  SUM = 0.d0
-  DO M=1,nmax
-     SUM = SUM+X(M)
-  ENDDO
-  AVE=SUM/nmax
-
-  SUM = 0.d0
-  DO M=1,nmax
-     SUM = SUM+(X(M)-AVE)**2
-  ENDDO
-  VAR = SUM/nmax
+  CALL AVEVAR(X,nmax,AVE,VAR)
+  IF(var.le.1.d-30)var = 1.d-30
 
   DO M=1,nmax
      X(M)=X(M)-AVE
@@ -446,12 +437,15 @@ SUBROUTINE PERIOD(X,Y,N,OFAC,HIFAC,PX,PY,NP,PROB)
   allocate(wr(n))
 
   CALL AVEVAR(Y,N,AVE,VAR)
+  IF(var.le.1.d-30)var = 1.d-30  
 
   DO J=2,N
      X(J) = X(J) - X(1)
+     Y(J) = Y(J) - AVE
   ENDDO
   
   X(1) = 0.d0
+  Y(1) = Y(1) - AVE
 
   XMIN=X(1)
   XMAX=XMIN
@@ -750,7 +744,7 @@ SUBROUTINE AVEVAR(X,NUM,AVG,VAR)
   integer, parameter :: double = selected_real_kind(15,300)
   INTEGER :: NUM, J
   REAL(DOUBLE) :: X(*)
-  REAL(DOUBLE) :: AVG,VAR,S,EP
+  REAL(DOUBLE) :: AVG,VAR,S
 
   AVG = 0.d0
   DO J=1,NUM
@@ -758,12 +752,10 @@ SUBROUTINE AVEVAR(X,NUM,AVG,VAR)
   ENDDO
   AVG = AVG/NUM
   VAR = 0.d0
-  EP  = 0.d0
   DO J=1,NUM
      S = X(J)-AVG
-     EP = EP + S
-     VAR = VAR + S**2
+     VAR = VAR + S*S
   ENDDO
-  VAR = (VAR-EP**2/NUM)/(NUM-1)
+  VAR = VAR/NUM
   RETURN
 END SUBROUTINE AVEVAR
