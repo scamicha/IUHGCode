@@ -2,19 +2,20 @@
 PROGRAM PERIODOGRAM
   implicit none
   integer, parameter :: double = selected_real_kind(15,300)
-  integer, parameter :: OFAC = 4, HIFAC = 2
+  integer, parameter :: OFAC = 2, HIFAC = 2
   integer :: jmax, kmax, lmax, istart, iend, iskip, numargs
   integer :: jmax2, kmax2, lmax2,modes,numfiles,fileiter
   integer :: j,k,l,i,m,tstartind,tendind,nout,nsub
-  integer :: jmax1,kmax1,jreq
+  integer :: jmax1,kmax1,jreq,ik
   REAL(DOUBLE), PARAMETER :: torp = 1605.63
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   real(double) :: ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,OMMAX,tmassini
-  real(double) :: aujreq,tstart,tend,prob,phi,dr
+  real(double) :: aujreq,tstart,tend,prob,phi,dr,omin,omax,delta,massum
+  real(DOUBLE) :: rconv
   real(double),dimension(:,:,:),allocatable :: rho,s,t,a,eps,omega
   real(double),dimension(:,:,:),allocatable :: angle,angsub,results,frequencies
-  real(double),dimension(:),allocatable :: omegavg,kappa,massum,timearr,am,bm,tsub
+  real(double),dimension(:),allocatable :: omegavg,kappa,timearr,am,bm,tsub
   real(double),dimension(:),allocatable :: X1,Y1,oneang,rhf
   character :: rhodir*80, savedir*80,rhofile*94,savedfile*94,outfile*80
   character :: jmaxin*8,kmaxin*8,lmaxin*8,istartin*8,iendin*8,iskipin*8,modein*8
@@ -64,11 +65,10 @@ PROGRAM PERIODOGRAM
   allocate(t(jmax2,kmax2,lmax))
   allocate(a(jmax2,kmax2,lmax))
   allocate(eps(jmax2,kmax2,lmax))
-  allocate(omega(jmax2,kmax2,lmax))
+  allocate(omega(jmax,kmax,lmax))
   allocate(omegavg(jmax))
   allocate(kappa(jmax))
-  allocate(massum(jmax))
-  allocate(angle(jmax2,modes,numfiles))
+  allocate(angle(jmax,modes,numfiles))
   allocate(rhf(jmax))
 
   write (filenum,'(I6.6)')iend
@@ -84,54 +84,61 @@ PROGRAM PERIODOGRAM
   read(8) tmassini
   CLOSE(8)
 
-!$OMP PARALLEL DEFAULT(SHARED)
   dr = ROF3N
+
+!$OMP PARALLEL DEFAULT(SHARED)
 !$OMP DO
-  DO j = 2,jmax1
-     rhf(j-1) = (DBLE(J)-2.d0)*dr+(0.5d0*dr)
+  DO j = 1,jmax
+     rhf(j) = (DBLE(J)-1.d0)*dr+(0.5d0*dr)
   ENDDO
 !$OMP END DO
+  rconv = aujreq/rhf(JREQ)
 
-!$OMP DO
-  DO j=1,jmax2
-     DO k=1,kmax2
-        DO l=1,LMAX
-           omega(j,k,l)=a(j,k,l)/(rhf(j)**2)
+!$OMP DO PRIVATE(J,K)
+  DO l=1,LMAX
+     DO j=1,jmax
+        DO k=1,kmax
+           omega(j,k,l)=a(j+1,k+1,l)/(rhf(j)**2)
         ENDDO
      ENDDO
-  ENDDO
-!$OMP END DO
-
-!$OMP DO REDUCTION(+:omegavg,massum)
-  DO J=2,jmax1
-     omegavg(j-1) = 0.d0
-     massum(j-1) = 0.d0
-     DO k=1,kmax2
-        DO l=1,lmax
-           omegavg(j-1) = omegavg(j-1) + omega(j,k,l)
-           massum(j-1) = massum(j-1) + rho(j,k,l)
-        ENDDO
-     ENDDO
-  ENDDO
-!$OMP END DO
-
-  omegavg(1) = (omegavg(1)*torp)/(massum(1)*twopi)
-  kappa(1) = omegavg(1)
-  rhf(1) = rhf(1)*aujreq/rhf(JREQ)
-  omegavg(jmax) = (omegavg(jmax)*torp)/(massum(jmax)*twopi)
-  kappa(jmax) = omegavg(jmax)
-  rhf(jmax) = rhf(jmax)*aujreq/rhf(JREQ)
-
-!$OMP DO
-  DO J=2,jmax-1
-     omegavg(j) = omegavg(j)/massum(j)
-     kappa(j) = sqrt(ABS(rhf(j)*omegavg(j)*(omegavg(j+1)- &
-          omegavg(j-1))/dr + 4.d0*omegavg(j)**2))*(torp/twopi)
-     omegavg(j) = omegavg(j)*(torp/twopi)
-     rhf(J) = rhf(J)*aujreq/rhf(JREQ)     
   ENDDO
 !$OMP END DO
 !$OMP END PARALLEL
+
+  DO J=1,jmax
+     omegavg(j) = 0.d0
+     massum = 0.d0
+     DO k=1,kmax
+        DO l=1,lmax
+           omegavg(j) = omegavg(j) + omega(j,k,l)
+           massum = massum + rho(j+1,k+1,l)
+        ENDDO
+     ENDDO
+     omegavg(j) = omegavg(j)/massum
+  ENDDO
+
+!$OMP PARALLEL DEFAULT(SHARED)
+!$OMP DO
+  DO J=2,jmax-1
+     kappa(j) = sqrt(ABS(rhf(j)*omegavg(j)*(omegavg(j+1)- &
+          omegavg(j-1))/dr + 4.d0*omegavg(j)**2))*(torp/twopi)
+     rhf(J) = rhf(J)*rconv     
+  ENDDO
+!$OMP END DO
+
+!$OMP DO
+  DO J=2,jmax-1
+     omegavg(j) = omegavg(j)*(torp/twopi)
+  ENDDO
+!$OMP END DO
+!$OMP END PARALLEL
+
+  omegavg(1) = omegavg(1)*(torp/twopi)
+  kappa(1) = omegavg(1)
+  rhf(1) = rhf(1)*rconv
+  omegavg(jmax) = omegavg(jmax)*(torp/twopi)
+  kappa(jmax) = omegavg(jmax)
+  rhf(jmax) = rhf(jmax)*rconv
 
   DO I = 1,NUMFILES
      fileiter = ((I-1)*iskip)+istart
@@ -152,26 +159,41 @@ PROGRAM PERIODOGRAM
      timearr(I)=time/torp
 
 !...   COMPUTE PHASE ANGLES
-!OMP PARALLEL DO DEFAULT(SHARED) &
-!OMP PRIVATE(am,bm,phi,j,l)
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(am,bm,phi,j,l)
 
      DO m = 1,modes
-        allocate(am(jmax2))
-        allocate(bm(jmax2))
+        allocate(am(jmax))
+        allocate(bm(jmax))
         am(:)   = 0.d0
         bm(:)   = 0.d0
-        DO j = 2,jmax+1
+        DO j = 1,jmax
            DO l=1,lmax
-              phi = twopi*dble(l)/dble(lmax)
-              am(j) = am(j)+rho(j,2,l)*cos(dble(m)*phi)
-              bm(j) = bm(j)+rho(j,2,l)*sin(dble(m)*phi)
+              phi = twopi*dble(l-1)/dble(lmax)
+              am(j) = am(j)+rho(j+1,2,l)*cos(dble(m)*phi)
+              bm(j) = bm(j)+rho(j+1,2,l)*sin(dble(m)*phi)
            ENDDO
-           angle(J,M,I) = atan2(am(J),bm(J))+pi
+
+           IF (am(J) > 0 ) THEN
+              angle(J,M,I) = atan(bm(J)/am(J))*180./pi
+           ELSE IF (am(J) < 0 ) THEN
+              angle(J,M,I) = (atan(bm(J)/am(J)) + pi)*180./pi
+           ELSE 
+              IF (bm(J) > 0 ) THEN
+                 angle(J,M,I) = 90.d0
+              ELSE IF (bm(J) < 0 ) THEN
+                 angle(J,M,I) = -90.d0
+              else
+                 angle(J,M,I) = 720.
+              endif
+           endif
+
+!           angle(J,M,I) = atan2(bm(J),am(J))+pi
         ENDDO
         deallocate(am)
         deallocate(bm)
      ENDDO
-!OMP END PARALLEL DO
+!$OMP END PARALLEL DO
   ENDDO
 
 !...    Extract time interval
@@ -191,7 +213,7 @@ PROGRAM PERIODOGRAM
      I = I+1
   ENDDO
 
-  tendind = I-1
+  tendind = I
   IF(tendind.eq.numfiles) THEN
      print*,"!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!"
      print*,"!!!  The end time specified in the   !!!"
@@ -203,6 +225,7 @@ PROGRAM PERIODOGRAM
 
   nsub = tendind - tstartind + 1
 
+  print*,"NUMFILES = ",numfiles
   print*,"NSUB = ",nsub
   print*,"TSTARTIND = ",tstartind
   print*,"TENDIND = ",tendind
@@ -210,57 +233,73 @@ PROGRAM PERIODOGRAM
   print*,"jmax2 = ",jmax2
   
   allocate(tsub(nsub))
-  allocate(angsub(jmax2,modes,nsub))
+  allocate(angsub(jmax,modes,nsub))
 
-  print*,"About to subsample angle"
-!$OMP PARALLEL DO PRIVATE(J,I)
+!$OMP PARALLEL DEFAULT(SHARED)
+!$OMP DO PRIVATE(J,I)
   DO M=1,modes
-     DO J=1,JMAX2
-        DO I=tstartind,tendind
-           angsub(J,M,I+1-tstartind)=angle(J,M,I)
+     DO J=1,JMAX
+        DO I=1,nsub
+           angsub(J,M,I)=angle(J,M,I+tstartind-1)
         ENDDO
      ENDDO
   ENDDO
-!$OMP END PARALLEL DO
+!$OMP END DO
 
-  print*,"About to subsample time array"
-!$OMP PARALLEL DO 
-  DO I = tstartind,tendind
-     tsub(I+1-tstartind)=timearr(I)
+!$OMP DO 
+  DO I = 1,nsub
+     tsub(I)=timearr(I+tstartind-1)*torp
   ENDDO
-!$OMP END PARALLEL DO
+!$OMP END DO
+!$OMP END PARALLEL
 
   nout = 0.5*OFAC*HIFAC*nsub
 
-  print*"about to allocate"
+  print*,"about to allocate"
 
-  allocate(oneang(nsub))
+
   allocate(X1(nout))
-  allocate(Y1(nout))
-  allocate(results(JMAX,modes,nout))
-  allocate(frequencies(JMAX,modes,nout))
+  allocate(results(JMAX,modes,2*nsub))
+  allocate(frequencies(JMAX,modes,2*nsub))
 
   print*,"about to call periodogram"
-!OMP PARALLEL DO DEFAULT(SHARED) &
-!OMP PRIVATE(oneang,J,I,X1,Y1,prob)
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(oneang,J,I,Y1,omin,delta,omax,ik)
   DO M=1,modes
-     DO J=2,JMAX+1
+     allocate(oneang(nsub))
+     allocate(Y1(2*nsub))
+     DO J=1,JMAX
         DO I = 1,nsub
-           oneang(I) = angsub(J,M,I)
+           oneang(I) = cos(angsub(J,M,I)*pi/180.)
+        ENDDO
+        DO I=1,2*nsub+1
+           Y1(I) = 0.d0
         ENDDO
         
-        call FASPER(tsub,oneang,nsub,OFAC,HIFAC,X1,Y1,nout,prob)
+        omin = 0.d0
+        delta = 0.d0
+
+        call PERIOD_ORIG(oneang,tsub,nsub,omin,omax,delta,torp,M,ik,Y1)
+
+
+        omin = omin*(torp/(twopi*M))
+        omax = omax*(torp/(twopi*M))
+        delta = delta*(torp/(twopi*M))
         
-        DO I = 1,nout
+        DO I = 1,ik
            results(J,M,I) = Y1(I)
-           frequencies(J,M,I) = X1(I)
+           frequencies(J,M,I) = omin + (delta)*(I-1)
+!           frequencies(J,M,I) = X1(I)*(torp/(twopi*M))
         ENDDO
+        
      ENDDO
+     deallocate(oneang)
+     deallocate(Y1)
   ENDDO
-!OMP END PARALLEL DO
+!$OMP END PARALLEL DO
 
   OPEN(UNIT=12,FILE=TRIM(outfile),FORM='UNFORMATTED')
-  WRITE(12) JMAX,modes,nout,tstart,tend,aujreq
+  WRITE(12) JMAX,modes,2*nsub,tstart,tend,aujreq
   WRITE(12) results
   WRITE(12) frequencies
   WRITE(12) rhf
@@ -278,6 +317,212 @@ PROGRAM PERIODOGRAM
 !...    one curve for OMPAT extraction.  Note that OMPAT=2pi/PPAT.
 
 END PROGRAM PERIODOGRAM
+
+SUBROUTINE PERIOD_ORIG(x,ti,nmax,omin,omax,delta,TORP,mode,ik,power)
+
+  IMPLICIT NONE
+  INTEGER, parameter :: double = selected_real_kind(15,30)
+
+
+  real(double),dimension(nmax)          :: x,ti
+  real(double),dimension(2*nmax+1)      :: power
+  REAL(double)          :: SMEGA,OMEGA,T,TMIN,omin,omax,delta,torp
+  real(double)          :: TWOPI,FNI,SUM,AVE,PMAX,PMIN,TOP,BOT,THETA1
+  real(double)          :: THETA2,XC,THETA,TAU,A,B,AA,BB,C,S,VAR,pi
+  INTEGER               :: N0,NMAX,mode,ARRAYSIZE,IK,M,L,j,K
+
+
+  TWOPI = 2.d0*ACOS(-1.d0)
+  PI = ACOS(-1.d0)
+  
+  SUM = 0.d0
+  DO M=1,nmax
+     SUM = SUM+X(M)
+  ENDDO
+  AVE=SUM/nmax
+
+  SUM = 0.d0
+  DO M=1,nmax
+     SUM = SUM+(X(M)-AVE)**2
+  ENDDO
+  VAR = SUM/nmax
+
+  DO M=1,nmax
+     X(M)=X(M)-AVE
+  ENDDO
+
+  DO M=2,nmax
+     TI(M)=TI(M)-TI(1)
+  ENDDO
+  TI(1)=0.d0
+
+  T = TI(nmax)
+
+  OMIN = TWOPI/T
+  OMAX = 4.d0*mode*TWOPI/torp
+  IK = 2.d0*nmax
+
+  DELTA = (omax-omin)/IK
+
+  OMEGA = OMIN
+
+  DO J=1,IK+1
+
+     SMEGA=OMEGA-0.0001*DELTA
+     CALL TTT(TI,SMEGA,nmax,TOP,BOT)
+     THETA1=ATAN(TOP/BOT)
+     CALL TTT(TI,OMEGA,nmax,TOP,BOT)
+     THETA2=ATAN(TOP/BOT)
+
+     XC=TOP/BOT
+     IF((XC.GE.0.d0).AND.(THETA2.GT.THETA1)) THETA=THETA2
+     IF((XC.GE.0.d0).AND.(THETA2.LT.THETA1)) THETA=PI-THETA2
+     IF((XC.LE.0.d0).AND.(THETA2.LT.THETA1)) THETA=PI+THETA2
+     IF((XC.LE.0.d0).AND.(THETA2.GT.THETA1)) THETA=TWOPI-THETA2
+
+     TAU=THETA/(2.d0*OMEGA)
+
+     A=0.d0
+     B=0.d0
+     AA=0.d0
+     BB=0.d0
+     DO K=1,nmax
+        A=A+(COS(OMEGA*(TI(K)-TAU)))**2
+        B=B+(SIN(OMEGA*(TI(K)-TAU)))**2
+        AA=AA+X(K)*COS(OMEGA*(TI(K)-TAU))
+        BB=BB+X(K)*SIN(OMEGA*(TI(K)-TAU))
+     ENDDO
+
+     C=AA*1.0/SQRT(A)
+     S=BB*1.0/SQRT(B)
+     POWER(j)=0.5*(C**2+S**2)/VAR
+     IF(Mode.eq.2)THEN
+     ENDIF
+     OMEGA=OMEGA+DELTA
+  ENDDO
+
+  RETURN
+END SUBROUTINE PERIOD_ORIG
+
+SUBROUTINE TTT(TI,OMEGA,N0,TOP,BOT)
+
+!...Companion to Periodogram
+  implicit none
+  integer, parameter :: double = selected_real_kind(15,300)
+
+  REAL(double),dimension(N0)          :: TI
+  REAL(DOUBLE)                        :: OMEGA,E,F,TOP,BOT
+  INTEGER                             :: K,N0
+
+  TOP=0.d0
+  BOT=0.d0
+  DO K=1,N0
+     E=SIN(2.d0*OMEGA*TI(K))
+     F=COS(2.d0*OMEGA*TI(K))
+     TOP=TOP+E
+     BOT=BOT+F
+  ENDDO
+  RETURN
+END SUBROUTINE TTT
+
+
+SUBROUTINE PERIOD(X,Y,N,OFAC,HIFAC,PX,PY,NP,PROB)
+  IMPLICIT NONE
+
+  integer, parameter :: double = selected_real_kind(15,300)
+  INTEGER :: i,j,N,OFAC,HIFAC,NP
+  REAL(DOUBLE),parameter :: pi = 3.14159265358979323846d0
+  REAL(DOUBLE),parameter :: twopi = 2.d0*pi
+  REAL(DOUBLE) :: ave,c,cc,cwtau,effm,expy,pnow,pymax,s,ss
+  REAL(DOUBLE) :: sumc,sumcy,sums,sumsh,sumsy,swtau,var,wtau
+  REAL(DOUBLE) :: xave,xdif,xmax,xmin,yy,arg,wtemp
+  REAL(DOUBLE) :: X(*),Y(*),PX(*),PY(*)
+  REAL(DOUBLE) :: PROB
+  REAL(DOUBLE),dimension(:),allocatable :: wi,wpi,wpr,wr
+
+  allocate(wi(n))
+  allocate(wpi(n))
+  allocate(wpr(n))
+  allocate(wr(n))
+
+  CALL AVEVAR(Y,N,AVE,VAR)
+
+  DO J=2,N
+     X(J) = X(J) - X(1)
+  ENDDO
+  
+  X(1) = 0.d0
+
+  XMIN=X(1)
+  XMAX=XMIN
+  DO J=1,N
+     IF(X(J).lt.XMIN)XMIN=X(J)
+     IF(X(J).gt.XMAX)XMAX=X(J)
+  ENDDO
+  XDIF=XMAX-XMIN
+  XAVE=0.5*(XMAX+XMIN)
+  pymax = 0.d0
+  pnow = 1.d0/(XDIF*OFAC)
+
+  DO J=1,N
+     arg = twopi*((X(J)-xave)*pnow)
+     wpr(J) = -2.d0*(sin(0.5d0*arg))**2
+     wpi(J) = sin(arg)
+     wr(J)  = cos(arg)
+     wi(J)  = wpi(J)
+  ENDDO
+
+  DO I=1,NP
+     px(i) = pnow
+     sumsh = 0.d0
+     sumc  = 0.d0
+     DO J=1,N
+        c = wr(J)
+        s = wi(J)
+        sumsh = sumsh + s*c
+        sumc = sumc + (c-s)*(c+s)
+     ENDDO
+     
+     wtau  = 0.5d0*atan2(2.d0*sumsh,sumc)
+     swtau = sin(wtau)
+     cwtau = cos(wtau)
+     sums  = 0.d0
+     sumc  = 0.d0
+     sumsy = 0.d0
+     sumcy = 0.d0
+     DO J=1,N
+        s = wi(J)
+        c = wr(J)
+        ss= s*cwtau - c*swtau
+        cc= c*cwtau + s*swtau
+        sums = sums + ss**2
+        sumc = sumc + cc**2
+        yy = y(J) - ave
+        sumsy = sumsy + yy*ss
+        sumcy = sumcy + yy*cc
+        wtemp = wr(J)
+        wr(J) = (wtemp*wpr(J)-wi(J)*wpi(J))+wr(J)
+        wi(J) = (wi(J)*wpr(J)+wtemp*wpi(J))+wi(J)
+     ENDDO
+     py(I) = 0.5d0*(sumcy**2/sumc+sumsy**2/sums)/var
+     IF (py(I).ge.pymax) pymax = py(I)
+     pnow = pnow + 1.d0/(ofac*xdif)
+  ENDDO
+  
+  expy = exp(-pymax)
+  effm = 2.d0*np/ofac
+  prob = effm*expy
+  IF (prob.lt.0.01d0) prob = 1.d0-(1.d0-expy)**effm
+  
+  deallocate(wr)
+  deallocate(wpr)
+  deallocate(wpi)
+  deallocate(wi)
+  
+  RETURN
+END SUBROUTINE PERIOD
+
+
 
 SUBROUTINE FASPER(X,Y,N,OFAC,HIFAC,WK1R,WK2R,NOUT,PROB)
   IMPLICIT NONE
@@ -301,6 +546,18 @@ SUBROUTINE FASPER(X,Y,N,OFAC,HIFAC,WK1R,WK2R,NOUT,PROB)
   allocate(wk1(NDIM))
   allocate(wk2(NDIM))
   CALL AVEVAR(Y,N,AVE,VAR)
+! Do some data rescaling. Subtract the mean from the angles.
+! Also subtract the start time from the time array, making
+! this array go from 0.0 to interval.
+  
+  DO J=2,N
+     X(J) = X(J) - X(1)
+!     Y(J) = Y(J) - AVE
+  ENDDO
+  
+  X(1) = 0.d0
+!  Y(1) = Y(1) - AVE
+
   XMIN=X(1)
   XMAX=XMIN
   DO J=1,N
