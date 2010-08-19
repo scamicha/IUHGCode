@@ -71,7 +71,7 @@ PROGRAM PERIODOGRAM
   allocate(angle(jmax,modes,numfiles))
   allocate(rhf(jmax))
 
-  write (filenum,'(I6.6)')iend
+  write (filenum,'(I8.8)')iend
   savedfile=trim(savedir)//'saved.'//filenum
   OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',  &
        STATUS="OLD")      
@@ -142,7 +142,7 @@ PROGRAM PERIODOGRAM
 
   DO I = 1,NUMFILES
      fileiter = ((I-1)*iskip)+istart
-     write (filenum,'(I6.6)')fileiter
+     write (filenum,'(I8.8)')fileiter
      rhofile = trim(rhodir)//'rho3d.'//filenum
      
      print*," PERIOD OUT -> OPENING FILE: ", rhofile

@@ -7,7 +7,7 @@
 # compile main code with ifort -o period -fast -openmp periodogram.f90
 
 setenv OMP_NUM_THREADS 8
-setenv KMP_STACKSIZE 1G
+setenv KMP_STACKSIZE 10M
 
 set jmax=512
 set kmax=64
