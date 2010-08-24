@@ -11,4 +11,4 @@ set indir=../RHOTEMP/
 if (! -x amspec) then
     ifort -O3 -pad -align all -nocheck -shared-intel -openmp -r8 -mtune=core2 -mcmodel=medium -convert big_endian -o amspec amspec.f90
 endif
-./amspec $jmax $kmax $lmax $start $finish $skip $outfile $jstart $indir
+./amspec $jmax $kmax $lmax $start $finish $skip $outfile $jstart $indir > amspec.out

@@ -80,14 +80,14 @@
             CYCLE
          ENDIF
          
-!         print*," AMS OUT -> OPENING FILE: ", rhofile
+         print*," AMS OUT -> OPENING FILE: ", rhofile
          OPEN(UNIT=12,FILE=rhofile,FORM="UNFORMATTED")
 
          READ(12) rho
          READ(12) time
          CLOSE(12)
          
-!         print*,' AMS OUT -> READ FILE: ',rhofile
+         print*,' AMS OUT -> READ FILE: ',rhofile
          count = count+1
          timearr(count) = time/tconv
          
@@ -142,10 +142,7 @@
       avga(:,:)    = avga(:,:)*2.d0/a0tot(:,:)      
 !      avga(:,:)    = LOG10(avga(:,:))
 !      avgamid(:,:) = LOG10(avgamid(:,:))
-!      print*,'FORTRAN COUNT = ',count
-
-!      print*,avga(2,:)
-!      print*,mmax, count
+      print*,'FORTRAN COUNT = ',count
 
       OPEN(UNIT=12,FILE=TRIM(outfile),FORM='UNFORMATTED')
       WRITE(12) mmax,count

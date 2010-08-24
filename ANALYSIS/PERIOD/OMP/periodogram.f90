@@ -21,6 +21,7 @@ PROGRAM PERIODOGRAM
   character :: jmaxin*8,kmaxin*8,lmaxin*8,istartin*8,iendin*8,iskipin*8,modein*8
   character :: filenum*8,aujreqin*10,tstartin*8,tendin*8
 
+
   numargs = IARGC()
 
   if(numargs.ne. 13) then
@@ -51,7 +52,7 @@ PROGRAM PERIODOGRAM
   read(aujreqin,*)aujreq
   read(tstartin,*)tstart
   read(tendin,*)tend
-
+  
   numfiles = ((iend-istart)/iskip)+1
   jmax1 = jmax+1
   kmax1 = kmax+1
@@ -145,7 +146,7 @@ PROGRAM PERIODOGRAM
      write (filenum,'(I8.8)')fileiter
      rhofile = trim(rhodir)//'rho3d.'//filenum
      
-     print*," PERIOD OUT -> OPENING FILE: ", rhofile
+!     print*," PERIOD OUT -> OPENING FILE: ", rhofile
      
      OPEN(UNIT=8, FILE=trim(rhofile),FORM='UNFORMATTED',  &
           STATUS='OLD')
@@ -153,8 +154,9 @@ PROGRAM PERIODOGRAM
      READ(8) time
      CLOSE(8)
      
-     print*,' PERIOD OUT -> READ FILE: ',rhofile
+     print*,' PERIOD OUT -> READ FILE: ',trim(rhofile)
      print*,' PERIOD OUT -> AT TIME: ',time/torp,' ORPS'
+     print*,' '
      
      timearr(I)=time/torp
 
@@ -255,14 +257,10 @@ PROGRAM PERIODOGRAM
 
   nout = 0.5*OFAC*HIFAC*nsub
 
-  print*,"about to allocate"
-
-
 !  allocate(X1(nout))
   allocate(results(JMAX,modes,2*nsub))
   allocate(frequencies(JMAX,modes,2*nsub))
 
-  print*,"about to call periodogram"
 !$OMP PARALLEL DO DEFAULT(SHARED) &
 !$OMP PRIVATE(oneang,J,I,Y1,omin,omax,delta,ik)
   DO M=1,modes
