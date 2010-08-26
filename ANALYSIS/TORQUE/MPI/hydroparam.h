@@ -19,9 +19,9 @@ C     resize them here.
 C     datadir is the location of the saved files, 
 C     outdir the directory where outfile will be written
 
-      parameter (datadir = '../SAVED/')
+      parameter (datadir = '../WAN_DATA/')
       parameter (outdir  = './')
-      parameter (outfile = 'torquedecompP0.5dat.MPI.')
+      parameter (outfile = 'torquedecompP1L512dat.MPI.')
 
 C     The following parameters are for the EOS
 !    Use H2STAT to select what type of mixture you want.
@@ -35,7 +35,7 @@ C     The following parameters are for the EOS
 !    please make sure you use the same values from the hydro run!!!
 
 !     CHANGE THESE
-      integer,parameter :: H2STAT=2
+      integer,parameter :: H2STAT=4
       real*8, parameter :: ac = 1.d0, bc = 3.d0
       real*8, parameter :: xabun = .73d0,yabun=.25d0,zabun=.02d0
       real*8, parameter :: gamma = 1.66666666666667d0,xn = 1.5d0
@@ -50,14 +50,14 @@ C     ISTART is the first file IEND the last one, and ISKIP the interval
 C     between saved files. Also make sure to set JMAX, KMAX, and LMAX 
 C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
 
-      parameter (ISTART=150000,IEND=320000,ISKIP=5000)
+      parameter (ISTART=205000,IEND=980000,ISKIP=5000)
       parameter (kmax= 64, kmax1=kmax+1, kmax2=kmax+2)
-      parameter(pot3kmax=kmax, pot3kmax1=pot3kmax+1, pot3kmax2=pot3kmax+2)
+      parameter(pot3kmax=kmax,pot3kmax1=pot3kmax+1,pot3kmax2=pot3kmax+2)
 
       parameter (jmax=512, jmax1=jmax+1, jmax2=jmax+2)
       parameter(pot3jmax=jmax,pot3jmax1=pot3jmax+1,pot3jmax2=pot3jmax+2)
 
-      parameter (lmax=128, lmax2=lmax/2)
+      parameter (lmax=512, lmax2=lmax/2)
 
 c  Minimum radial grid point, for cutting out central star.
       parameter (jmin=11,jmin1=jmin-1,jmin2=jmin-2)

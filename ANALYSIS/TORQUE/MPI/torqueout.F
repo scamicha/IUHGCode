@@ -14,7 +14,8 @@
 
       real(KIND=8) :: 
      &  kephi,dummy0,dummy1,dummy2,Aomega,rconv, vconv, limiter,tc,
-     &  deriv,eta, dummy, dummy3, dummy4, dummy5, dummy6,timediff
+     &  deriv,eta, dummy, dummy3, dummy4, dummy5, dummy6,timediff,
+     &  mtot
 
       real*8 DTHETA, PI, GRAV
       COMMON /BLOK6/DTHETA,PI,GRAV

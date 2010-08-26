@@ -4,15 +4,13 @@
  #MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -mtune=core2 -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -xHost -mcmodel=medium -convert big_endian
 
  OMPF95     = mpif90
 
- F90FLAGS   = -O3 -pad -align all -nocheck -fast -shared-intel -openmp -fixed
+ F90FLAGS   = -O3 -pad -align all -nocheck -ipo -no-prec-div -shared-intel -openmp -fixed
 
- LINKFLAGS  = -O3 -pad -align all -nocheck -shared-intel -openmp -fixed
-
- LIBS       = $(LINKFLAGS) $(TARCH)
+ LIBS       = $(F90FLAGS) $(TARCH)
 
 # C compilers
  CC         = icc
@@ -20,7 +18,7 @@
  .f.o:
 	$(OMPF95) $(F90FLAGS) -c $*.f
 
- OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o
+ OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o initengtable.o
 
 #===============================================================================
 #                        EXECUTABLES
@@ -55,4 +53,7 @@ torqueout.o: torqueout.F
 	$(FC) $(CFLAGS) -c $<
 
 boundary.o: boundary.f
+	$(FC) $(CFLAGS) -c $<
+
+initengtable.o: initengtable.f
 	$(FC) $(CFLAGS) -c $<
