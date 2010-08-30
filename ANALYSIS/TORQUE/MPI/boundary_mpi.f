@@ -14,8 +14,8 @@ C  If ABS(ISYM) = 1 or 8, dimension them (2*POT3JMAX + POT3KMAX -1).
 C  = 2,3, or 9, dimension them (POT3JMAX + POT3KMAX -1).        
 C                                                                       
       IMPLICIT real*8 (a-h,o-z)                                         
-      INCLUDE 'hydroparam.h'
-      include 'globals.h'
+      INCLUDE 'hydroparam_mpi.h'
+      include 'globals_mpi.h'
 C     
       PARAMETER(JKM1=2*POT3JMAX+POT3KMAX-1)
       COMMON /BLOK6/ DTHETA,PI,GRAV

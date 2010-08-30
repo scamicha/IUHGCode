@@ -1,7 +1,7 @@
       subroutine init()
       
-      INCLUDE 'hydroparam.h'
-      INCLUDE 'globals.h'
+      INCLUDE 'hydroparam_mpi.h'
+      INCLUDE 'globals_mpi.h'
 
       INTEGER :: jreq
 
@@ -47,8 +47,8 @@
 ! and dzpdt and ddzpdtt are its derivatives, *e for equilibrium, and *o for ortho.
       subroutine Initengtable()
         implicit none
-        include 'hydroparam.h'
-        include 'globals.h'
+        include 'hydroparam_mpi.h'
+        include 'globals_mpi.h'
         
         integer J,I,jreq
         
@@ -240,8 +240,8 @@
                             ! calculated in setup based on X, Y, Z composition
                             ! and other assumptions.
          implicit none
-         include 'hydroparam.h'
-         include 'globals.h'
+         include 'hydroparam_mpi.h'
+         include 'globals_mpi.h'
         
          integer J,K,L,I ,jreq
          real*8 limiter
@@ -331,7 +331,7 @@
 
          implicit none
 
-         include 'hydroparam.h'
+         include 'hydroparam_mpi.h'
 
          integer I
          real*8 eng,eps,rho,temp

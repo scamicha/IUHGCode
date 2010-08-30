@@ -1,7 +1,7 @@
       subroutine torqueout(AMCOUNT)
       implicit none
-      include 'hydroparam.h'
-      include 'globals.h'
+      include 'hydroparam_mpi.h'
+      include 'globals_mpi.h'
       include 'globals_mpi.h'
       include 'mpif.h'
 

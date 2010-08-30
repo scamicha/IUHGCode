@@ -16,9 +16,9 @@ C*******************************************************************************
      
       IMPLICIT real*8 (a-h,o-z)      
 
-      INCLUDE 'hydroparam.h'
-      INCLUDE 'globals.h'
+      INCLUDE 'hydroparam_mpi.h'
       INCLUDE 'globals_mpi.h'
+      INCLUDE 'mpi_inc.h'
       INCLUDE 'mpif.h'
 
       integer COUNTER
@@ -710,8 +710,8 @@ c*******************************************************************************
       SUBROUTINE ZAXPHI(NPOINT,IPRINT)
       IMPLICIT real*8 (a-h,o-z)      
 
-      include 'hydroparam.h'
-      include 'globals.h'
+      include 'hydroparam_mpi.h'
+      include 'globals_mpi.h'
 
       COMMON /INSIDE/TMASS,ENEW,ELOST,EDIF,PHICHK,KLOCAT
       COMMON /COEFS/COEF(POT3JMAX2,POT3KMAX2,LMAX2,2)

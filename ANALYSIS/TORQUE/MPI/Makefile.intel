@@ -40,20 +40,20 @@ clean:
 #===============================================================================
 #                          OBJECTS
 
-fft.o: fft.f
+fft.o: fft_mpi.f
 	$(FC) $(CFLAGS) -c $<
 
-dcomp.o: dcomp.f
-	$(FC) $(CFLAGS) -c dcomp.f
+dcomp.o: dcomp_mpi.f
+	$(FC) $(CFLAGS) -c dcomp_mpi.f
 
-blktri.o: blktri.f
+blktri.o: blktri_mpi.f
 	$(FC) $(CFLAGS) -c $<
 
-torqueout.o: torqueout.F
+torqueout.o: torqueout_mpi.F
 	$(FC) $(CFLAGS) -c $<
 
-boundary.o: boundary.f
+boundary.o: boundary_mpi.f
 	$(FC) $(CFLAGS) -c $<
 
-initengtable.o: initengtable.f
+initengtable.o: initengtable_mpi.f
 	$(FC) $(CFLAGS) -c $<
