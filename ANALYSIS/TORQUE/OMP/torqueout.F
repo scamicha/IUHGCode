@@ -15,7 +15,6 @@
      &  deriv,eta, dummy, dummy3, dummy4, dummy5, dummy6,timediff,
      &  mtot
 
-      real(KIND=8), save :: times
       real*8 DTHETA, PI, GRAV, BGDEN
       COMMON /BLOK6/DTHETA,PI,GRAV,BGDEN
        
@@ -130,8 +129,9 @@ C$OMP END DO
                   sigma_2d(J,L) =  sigma_2d(J,L) + 
      &                 (rhosave(J,K,L)+rhosave(J-1,K,L))*zof3n
 
-                  dummy6 = dummy6+0.5d0*(gamma1(J,K,L)+gamma1(J-1,K,L))*
-     &                 (p(J,K,L)+p(J-1,K,L))*zof3n
+                  dummy6 =dummy6+0.5d0*(gamma1(J,K,L)+gamma1(J-1,K,L))*
+     &                 (p(J,K,L)+p(J-1,K,L))/(rhosave(J-1,K,L)+
+     &                 rhosave(J,K,L))
 
                   if ( 0.5d0*( rhosave(J,K,L) + rhosave(J-1,K,L) ) >= 
      &                 limiter ) then
@@ -162,7 +162,7 @@ C$OMP END DO
      &           + mass_fc(J-1)
 
             cs_fc(J)    = dummy1 / dble(LMAX)
-            cs_sig(J)   = cs_sig(J) + dummy6 / dble(LMAX)
+            cs_sig(J)   = sigma_fc(J)*dummy6 /(dble(LMAX)*dble(KMAX))
 
             omega_fc(J) = omega_fc(J) + dummy2 / dble(LMAX)
 
