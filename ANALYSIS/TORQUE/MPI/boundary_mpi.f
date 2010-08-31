@@ -105,8 +105,8 @@ C        .GT.0.0, mass entirely within sphere of radius = redge.
 C                                                                       
 C                                                                       
       IMPLICIT real*8 (a-h,o-z)
-      INCLUDE 'hydroparam.h'
-      INCLUDE 'globals.h'
+      INCLUDE 'hydroparam_mpi.h'
+      INCLUDE 'globals_mpi.h'
 
       COMMON /INSIDE/ TMASS,ENEW,ELOST,EDIF,PHICHK,KLOCAT              
 

@@ -122,8 +122,6 @@ CSAM....Read a saved file to set up r and z grid
          DTHETA = 2.0*PI/dble(LMAX)
          
          rholmt = den*1.d-12
-         pi = acos(-1.d0)
-         dtheta = 2.d0*pi/dble(LMAX)
          CALL SETBDY(0,ISYM)
          
          COUNTER = COUNTER + 1
@@ -145,8 +143,7 @@ CSAM....Set up grid
 
          print *, ' Your time is ', time/1605.63
 
-C$OMP PARALLEL DEFAULT(PRIVATE) SHARED(RHOSAVE,aofm,bofm)
-C$OMP&  PRIVATE(J,K,L,AMCOUNT) SHARED(axi,aofmtmp,bofmtmp)
+C$OMP PARALLEL DEFAULT(SHARED) PRIVATE(J,K,AMCOUNT)
 C$OMP&  COPYIN(/BLOK6/,/GRID/)
 
 !$OMP DO REDUCTION(+:axi)
@@ -192,14 +189,13 @@ C$OMP&  COPYIN(/BLOK6/,/GRID/)
 
 !$OMP END PARALLEL
 
-         DO AMCOUNT=0,LMAX/2     ! CHANGE
+         DO AMCOUNT=0,MMAX     ! CHANGE
             rho = 0.d0
 
-C$OMP PARALLEL DEFAULT(PRIVATE) PRIVATE(J,K,L) 
-C$OMP&  SHARED(PHI,RHO,COEF,axi,aofm,bofm,AMCOUNT,rholmt,RHOSAVE)
+C$OMP PARALLEL DEFAULT(SHARED) PRIVATE(J,K) 
 C$OMP&  COPYIN(/BLOK6/,/GRID/) 
 
-!$OMP DO FIRSTPRIVATE(AMCOUNT,rholmt,RHOSAVE)
+!$OMP DO FIRSTPRIVATE(AMCOUNT,rholmt)
             do L = 1, LMAX
                do K = 2, KMAX
                   do J = 2, JMAX
@@ -230,7 +226,6 @@ CSAM....Read in rhofile
 !               write(14)time
 !               CLOSE(14)
 !            ENDIF
-
 
             CALL BDYGEN(MAXTRM,ISYM,REDGE)
 
@@ -572,7 +567,7 @@ C$OMP END PARALLEL
        
 
 
-      END                                                                
+       END PROGRAM                                                            
 
 
 c*******************************************************************************

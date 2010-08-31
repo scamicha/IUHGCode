@@ -1,10 +1,10 @@
 # -*-Makefile-*-
 # makefile for the 3-D astrophysical hydrodynamics code.
 
- MAKEFILE = Makefile.intel
+ #MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -axsse3 -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -axsse3 -mcmodel=medium
 
  OMPF95     = ifort
 
@@ -24,7 +24,7 @@
 #                        EXECUTABLES
 
 decompose: dummy
-	make -f $(MAKEFILE) target "FC=$(OMPF95)" "CC=$(CC)" \
+	make target "FC=$(OMPF95)" "CC=$(CC)" \
  "CFLAGS=$(F90FLAGS) $(TARCH)" "TARGET = decompose"
 
 #-------------------------------------------------------------------------------

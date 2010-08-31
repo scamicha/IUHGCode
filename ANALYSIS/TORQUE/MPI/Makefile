@@ -4,7 +4,7 @@
  #MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -xHost -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -xHost -mcmodel=medium
 
  OMPF95     = mpif90
 
@@ -18,7 +18,8 @@
  .f.o:
 	$(OMPF95) $(F90FLAGS) -c $*.f
 
- OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o initengtable.o
+ OBJ = fft_mpi.o dcomp_mpi.o blktri_mpi.o torqueout_mpi.o \
+       boundary_mpi.o initengtable_mpi.o
 
 #===============================================================================
 #                        EXECUTABLES
@@ -40,20 +41,20 @@ clean:
 #===============================================================================
 #                          OBJECTS
 
-fft.o: fft_mpi.f
+fft_mpi.o: fft_mpi.f
 	$(FC) $(CFLAGS) -c $<
 
-dcomp.o: dcomp_mpi.f
+dcomp_mpi.o: dcomp_mpi.f
 	$(FC) $(CFLAGS) -c dcomp_mpi.f
 
-blktri.o: blktri_mpi.f
+blktri_mpi.o: blktri_mpi.f
 	$(FC) $(CFLAGS) -c $<
 
-torqueout.o: torqueout_mpi.F
+torqueout_mpi.o: torqueout_mpi.F
 	$(FC) $(CFLAGS) -c $<
 
-boundary.o: boundary_mpi.f
+boundary_mpi.o: boundary_mpi.f
 	$(FC) $(CFLAGS) -c $<
 
-initengtable.o: initengtable_mpi.f
+initengtable_mpi.o: initengtable_mpi.f
 	$(FC) $(CFLAGS) -c $<

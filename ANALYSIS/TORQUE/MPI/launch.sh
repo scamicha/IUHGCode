@@ -7,4 +7,4 @@
 
 setenv OMP_NUM_THREADS 8
 setenv KMP_STACKSIZE 1G
-./decompose > P0.5MPI.out
+./decompose > indirectMPI.out

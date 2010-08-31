@@ -2,7 +2,7 @@
       implicit none
       include 'hydroparam_mpi.h'
       include 'globals_mpi.h'
-      include 'globals_mpi.h'
+      include 'mpi_inc.h'
       include 'mpif.h'
 
       real(KIND=8), dimension(JMAX2,KMAX2,LMAX) :: gforce_phi, vr, vphi,
