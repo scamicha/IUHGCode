@@ -100,9 +100,8 @@ C$OMP DO SCHEDULE(STATIC)
          DO L=1,LMAX
             DO K=1,KMAX2
                DO J=1,jmax2
-                  p(J,K,L) = bkmpcgs*tempk(J,K,L)*rhoconv  ! not multiplying by rho since we divide by it for c_s
+                  p(J,K,L) = bkmpcgs*tempk(J,K,L)*rhoconv*rhosave(J,K,L)
      &                 / (muc*pconv)
-
                end do
             ENDDO
          ENDDO
@@ -121,7 +120,7 @@ C$OMP END DO
             omega_fc(J) = 0.d0
 
             do L = 1, LMAX
-               do K = 2, KMAX
+               do K = 2, KMAX+1
 
                   dummy0 = dummy0 + (rhosave(J,K,L) + rhosave(J-1,K,L))
      &                 * zof3n
@@ -130,8 +129,7 @@ C$OMP END DO
      &                 (rhosave(J,K,L)+rhosave(J-1,K,L))*zof3n
 
                   dummy6 =dummy6+0.5d0*(gamma1(J,K,L)+gamma1(J-1,K,L))*
-     &                 (p(J,K,L)+p(J-1,K,L))/(rhosave(J-1,K,L)+
-     &                 rhosave(J,K,L))
+     &                 (p(J,K,L)+p(J-1,K,L))*zof3n
 
                   if ( 0.5d0*( rhosave(J,K,L) + rhosave(J-1,K,L) ) >= 
      &                 limiter ) then
@@ -149,10 +147,9 @@ C$OMP END DO
                dummy2 = dummy2 + ( a(J,2,L) + a(J-1,2,L) ) / 
      &              ( r(J)**2 * ( rhosave(J,2,L) + rhosave(J-1,2,L)))
 
-!               dummy6 = dummy6 + ((gamma*(gamma-1.d0))*(eps(J,2,L) + 
-!     &              eps(J-1,2,L) )/( rhosave(J,2,L) + 
-!     &              rhosave(J-1,2,L) ) )*sigma_2d(J,L)
-
+c$$$                  dummy6 =dummy6+0.5d0*(gamma1(J,2,L)+gamma1(J-1,2,L))*
+c$$$     &                 (p(J,2,L)+p(J-1,2,L))/(rhosave(J-1,2,L)+
+c$$$     &                 rhosave(J,2,L))
 
             enddo
            
@@ -162,7 +159,7 @@ C$OMP END DO
      &           + mass_fc(J-1)
 
             cs_fc(J)    = dummy1 / dble(LMAX)
-            cs_sig(J)   = sigma_fc(J)*dummy6 /(dble(LMAX)*dble(KMAX))
+            cs_sig(J)   = dummy6 /(dble(LMAX))
 
             omega_fc(J) = omega_fc(J) + dummy2 / dble(LMAX)
 
