@@ -145,6 +145,11 @@
             ENDIF
 
             DO PROCESS=1,AMCOUNT-1
+               DO J = 1,mpiter
+                  answers(J)%a = 0.d0
+                  answers(J)%amid = 0.d0
+               ENDDO
+
                call MPI_RECV(answers,2*mpiter,MPI_DOUBLE_PRECISION,&
                     MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,status,&
                     mpierr)
@@ -155,9 +160,11 @@
                package(2) = m_return*mpiter
                package(1) = package(2)-mpiter+1
 
+               fill = 1
                DO j=package(1),package(2)
-                  avga(j,count) = answers(j)%a
-                  avgamid(j,count) = answers(j)%amid
+                  avga(j,count-1) = answers(fill)%a
+                  avgamid(j,count-1) = answers(fill)%amid
+                  fill = fill + 1
                ENDDO
                
 !!$               IF(AMCOUNT.le.MMAX) THEN
