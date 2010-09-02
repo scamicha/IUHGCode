@@ -118,8 +118,8 @@
                   sigma_2d(J,L) =  sigma_2d(J,L) + 
      &                 (rhosave(J,K,L)+rhosave(J-1,K,L))*zof3n
 
-                  dummy6 = dummy6+(gamma*(gamma-1.d0))*(eps(J,K,L)+ 
-     &                 eps(J-1,K,L) )*zof3n
+                  dummy6 = dummy6+0.5d0*(gamma1(J,K,L)+gamma1(J-1,K,L))*
+     &                 (p(J,K,L)+p(J-1,K,L))*zof3n
 
                   if ( 0.5d0*( rhosave(J,K,L) + rhosave(J-1,K,L) ) >= 
      &                 limiter ) then
@@ -131,16 +131,15 @@
 
                enddo
 
-               dummy1 = dummy1 + sqrt((gamma*(gamma-1.d0))*(eps(J,2,L) + 
-     &              eps(J-1,2,L) )/( rhosave(J,2,L) + 
-     &              rhosave(J-1,2,L) ) )
+               dummy1 = dummy1 + sqrt( 0.25d0*(gamma1(J,K,L)+
+     &              gamma1(J-1,K,L))*(p(J,K,L)+p(J-1,K,L)) )
 
                dummy2 = dummy2 + ( a(J,2,L) + a(J-1,2,L) ) / 
      &              ( r(J)**2 * ( rhosave(J,2,L) + rhosave(J-1,2,L)))
 
-!               dummy6 = dummy6 + ((gamma*(gamma-1.d0))*(eps(J,2,L) + 
-!     &              eps(J-1,2,L) )/( rhosave(J,2,L) + 
-!     &              rhosave(J-1,2,L) ) )*sigma_2d(J,L)
+c$$$                  dummy6 =dummy6+0.5d0*(gamma1(J,2,L)+gamma1(J-1,2,L))*
+c$$$     &                 (p(J,2,L)+p(J-1,2,L))/(rhosave(J-1,2,L)+
+c$$$     &                 rhosave(J,2,L))
 
 
             enddo
@@ -151,7 +150,7 @@
      &           + mass_fc(J-1)
 
             cs_fc(J)    = dummy1 / dble(LMAX)
-            cs_sig(J)   = cs_sig(J) + dummy6 / dble(LMAX)
+            cs_sig(J)   = dummy6 / dble(LMAX)
 
             omega_fc(J) = omega_fc(J) + dummy2 / dble(LMAX)
 
