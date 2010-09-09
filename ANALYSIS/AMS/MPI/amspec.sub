@@ -1,22 +1,45 @@
+#!/bin/bash
 #A sample job submission script using PBS on Quarry at IU
 #be sure to set nodes and ppn to match the OMP_NUM_THREADS set
 #in launch.sh. Will run out of the directory the job was submitted from.
 # -N sets the name of the run.
 
-#PBS -l nodes=6:ppn=1,walltime=30:00
-#PBS -N phalf_MPI
-#PBS -q batch
+#PBS -l nodes=8:ppn=8,walltime=10:30:00
+#PBS -N L512am_MPI
+#PBS -q pg
 #PBS -j oe
 
+export NUM_RANKS=2
 cd $PBS_O_WORKDIR
 
-if (! -x amspec_mpi) then
+if [ -e hostfile ]; then
+  rm -f hostfile
+fi
+
+if [ -e hostfile.new ]; then
+  rm -f hostfile.new
+fi
+
+if [ ! -x amspec_mpi ]; then
 mpif90 -O3 -pad -align all -nocheck -ipo -no-prec-div -shared-intel -openmp -r8 -xHost -mcmodel=medium -convert native -o amspec_mpi amspec_mpi.f90
-endif
+fi
 
-if (! -x  launch.sh) then
+if [ ! -x  launch.sh ]; then
 chmod u+x launch.sh
-endif
+fi
 
-set NP=`wc -l $PBS_NODEFILE | awk '{print $1}'` 
-mpirun -machinefile $PBS_NODEFILE -np $NP ./launch.sh
+cat $PBS_NODEFILE | uniq > hostfile
+
+COUNTER=0
+while [ $COUNTER -lt $NUM_RANKS ]
+  do
+    cat hostfile >> hostfile.new
+    let COUNTER=COUNTER+1
+  done
+
+sort hostfile.new > hostfile
+
+NP=`wc -l ./hostfile | awk '{print $1}'` 
+
+mpirun -machinefile hostfile -np $NP ./launch.sh
+rm -f hostfile hostfile.new

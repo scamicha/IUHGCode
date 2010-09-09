@@ -37,10 +37,10 @@
       rholmt = 1.d-12*den
       limiter= 1.d-7*den
 
-      IF(AMCOUNT.EQ.0)THEN
-        print *, ' RHOLMT is ',rholmt, ' THIS IS HARDCODED INTO TORQUEOU
-     &T'
-      ENDIF
+!      IF(AMCOUNT.EQ.0)THEN
+!        print *, ' RHOLMT is ',rholmt, ' THIS IS HARDCODED INTO TORQUEOU
+!     &T'
+!      ENDIF
  
       pi = acos(-1.d0)
       dtheta = 2.d0*pi/dble(LMAX)

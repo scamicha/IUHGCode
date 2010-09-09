@@ -50,7 +50,7 @@ C     ISTART is the first file IEND the last one, and ISKIP the interval
 C     between saved files. Also make sure to set JMAX, KMAX, and LMAX 
 C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
 
-      parameter (ISTART=200000,IEND=450000,ISKIP=5000)
+      parameter (ISTART=290000,IEND=450000,ISKIP=5000)
       parameter (kmax= 64, kmax1=kmax+1, kmax2=kmax+2)
       parameter(pot3kmax=kmax,pot3kmax1=pot3kmax+1,pot3kmax2=pot3kmax+2)
 

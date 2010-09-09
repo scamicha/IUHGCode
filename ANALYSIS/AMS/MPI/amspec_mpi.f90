@@ -88,7 +88,7 @@
          ALLOCATE(timearr(size))
 
          count = 0
-         write(filenum,'(I8.8)')start
+         write(filenum,'(I6.6)')start
          rhofile=trim(indir)//'rho3d.'//filenum
          OPEN(UNIT=12,FILE=trim(rhofile),FORM='UNFORMATTED')
 
@@ -120,7 +120,7 @@
 911         CONTINUE
 
             IF(I.lt.finish) THEN
-               WRITE(filenum,'(I8.8)')i+skip
+               WRITE(filenum,'(I6.6)')i+skip
                rhofile = trim(indir)//"rho3d."//filenum
          
                INQUIRE(FILE=trim(rhofile),EXIST=EXISTSTAT)
@@ -132,14 +132,14 @@
 !                  GO TO 911
                ENDIF
          
-!         print*," AMS OUT -> OPENING FILE: ", rhofile
+         print*," AMS OUT -> OPENING FILE: ", rhofile
                OPEN(UNIT=12,FILE=trim(rhofile),FORM="UNFORMATTED")
 
                READ(12) rho
                READ(12) time
                CLOSE(12)
          
-!         print*,' AMS OUT -> READ FILE: ',rhofile
+         print*,' AMS OUT -> READ FILE: ',rhofile
                count = count+1
                timearr(count) = time/tconv
             ENDIF
