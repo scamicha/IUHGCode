@@ -4,7 +4,7 @@
  #MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -xHost -mcmodel=medium
+ TARCH      = -r8 -xHost -mcmodel=medium -convert big_endian
 
  OMPF95     = mpif90
 
@@ -26,7 +26,7 @@
 
 decompose: dummy
 	make target "FC=$(OMPF95)" "CC=$(CC)" \
- "CFLAGS=$(F90FLAGS) $(TARCH)" "TARGET = decompose"
+ "CFLAGS=$(F90FLAGS) $(TARCH)" "TARGET = decompose_mpi"
 
 #-------------------------------------------------------------------------------
 target: $(OBJ) $(PERFOBJ) $(DBGOBJ)
@@ -35,7 +35,7 @@ target: $(OBJ) $(PERFOBJ) $(DBGOBJ)
 dummy:
 
 clean:
-	rm -f *.o decompose
+	rm -f *.o decompose_mpi
 
 
 #===============================================================================

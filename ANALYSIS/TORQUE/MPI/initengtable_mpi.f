@@ -228,7 +228,7 @@
         close(456)
 
 
-        print "(A,1pe10.3)","INITENGTABLE-> muc is ", muc
+!        print "(A,1pe10.3)","INITENGTABLE-> muc is ", muc
       
       return
 

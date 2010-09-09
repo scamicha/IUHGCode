@@ -109,7 +109,6 @@ CSAM....Read a saved file to set up r and z grid
 
          write (filenum,'(I6.6)')ISTART
          savedfile=trim(datadir)//'saved.'//filenum
-         print *, savedfile
          OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
      &        STATUS="OLD",ERR=911)
       
@@ -121,6 +120,10 @@ CSAM....Read a saved file to set up r and z grid
          READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
          read(8) tmassini
          CLOSE(8)
+
+         print*, 'Opened file: ',trim(savedfile)
+         print*, '   Your time is ', time/1605.63
+
 
          do I=ISTART,IEND,ISKIP
       
@@ -135,8 +138,6 @@ CSAM....Read a saved file to set up r and z grid
 
             timearr(COUNTER) = time/1605.63      
          
-            print *, ' Your time is ', time/1605.63
-
             AMCOUNT = 0
 
             call MPI_BCAST(RHOSAVE,JMAX2*KMAX2*LMAX,
@@ -169,7 +170,6 @@ CSAM....Read a saved file to set up r and z grid
             IF (I.lt.IEND) THEN
                write (filenum,'(I6.6)')I+ISKIP
                savedfile=trim(datadir)//'saved.'//filenum
-               print *, savedfile
                OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
      &              STATUS="OLD",ERR=911)
       
@@ -181,6 +181,9 @@ CSAM....Read a saved file to set up r and z grid
                READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
                read(8) tmassini
                CLOSE(8)
+               
+               print*, 'Opened file: ',trim(savedfile)
+               print*, '   Your time is ', time/1605.63               
             ENDIF
 
             DO PROCESS=1,LMAX/2+1
