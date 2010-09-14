@@ -64,7 +64,7 @@ C the right thing if I do not.)
 C$OMP THREADPRIVATE(/CBLKT/,/BLOKJ1/)
 
 
-      LOGICAL  INIT_BLKTRI
+      LOGICAL  INIT_BLKTRI,FILE_EXIST
 
       CHARACTER savedfile*80,phifile*80,filenum*6
       INTEGER I, NUMFILES,PROCESS,m_return,sender
@@ -109,23 +109,55 @@ CSAM....Read a saved file to set up r and z grid
 
          write (filenum,'(I6.6)')ISTART
          savedfile=trim(datadir)//'saved.'//filenum
-         OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
-     &        STATUS="OLD",ERR=911)
+         INQUIRE(file=savedfile, exist=FILE_EXIST)
+         IF (FILE_EXIST) THEN
+            OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
+     &           STATUS="OLD",ERR=911)
       
-         READ(8) S
-         READ(8) T
-         READ(8) A
-         READ(8) RHOSAVE
-         READ(8) EPS
-         READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
-         read(8) tmassini
-         CLOSE(8)
+            READ(8) S
+            READ(8) T
+            READ(8) A
+            READ(8) RHOSAVE
+            READ(8) EPS
+            READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
+            read(8) tmassini
+            CLOSE(8)
 
-         print*, 'Opened file: ',trim(savedfile)
-         print*, '   Your time is ', time/1605.63
+            print*, 'Opened file: ',trim(savedfile)
+            print*, '   Your time is ', time/1605.63
+         ENDIF
 
 
          do I=ISTART,IEND,ISKIP
+            call MPI_BCAST(FILE_EXIST,1,MPI_LOGICAL,0,
+     &           MPI_COMM_WORLD,mpierr)
+
+            IF (FILE_EXIST) THEN
+               CONTINUE
+            ELSE
+               IF (I.lt.IEND) THEN
+                  write (filenum,'(I6.6)')I+ISKIP             
+                  savedfile=trim(datadir)//'saved.'//filenum
+                  INQUIRE(file=savedfile,exist=FILE_EXIST)
+                  IF (FILE_EXIST) THEN
+                     OPEN(UNIT=8, FILE=trim(savedfile),
+     &                    FORM='UNFORMATTED',STATUS="OLD",ERR=911)      
+                     READ(8) S
+                     READ(8) T
+                     READ(8) A
+                     READ(8) RHOSAVE
+                     READ(8) EPS
+                     READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,
+     &                    OMMAX
+                     read(8) tmassini
+                     CLOSE(8)
+               
+                     print*, 'Opened file: ',trim(savedfile)
+                     print*, '   Your time is ', time/1605.63
+                  ENDIF              
+               ENDIF
+               GOTO 768
+            ENDIF
       
             first_pass = 1
 
@@ -168,22 +200,27 @@ CSAM....Read a saved file to set up r and z grid
             AMCOUNT = AMCOUNT-1
             answer_width = 5*JMAX2
             IF (I.lt.IEND) THEN
-               write (filenum,'(I6.6)')I+ISKIP
+               write (filenum,'(I6.6)')I+ISKIP             
                savedfile=trim(datadir)//'saved.'//filenum
-               OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
-     &              STATUS="OLD",ERR=911)
+               INQUIRE(file=savedfile,exist=FILE_EXIST)
+               IF (FILE_EXIST) THEN
+                  OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',
+     &                 STATUS="OLD",ERR=911)
       
-               READ(8) S
-               READ(8) T
-               READ(8) A
-               READ(8) RHOSAVE
-               READ(8) EPS
-               READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
-               read(8) tmassini
-               CLOSE(8)
+                  READ(8) S
+                  READ(8) T
+                  READ(8) A
+                  READ(8) RHOSAVE
+                  READ(8) EPS
+                  READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,
+     &                 OMMAX
+                  read(8) tmassini
+                  CLOSE(8)
                
-               print*, 'Opened file: ',trim(savedfile)
-               print*, '   Your time is ', time/1605.63               
+                  print*, 'Opened file: ',trim(savedfile)
+                  print*, '   Your time is ', time/1605.63
+               ENDIF
+               
             ENDIF
 
             DO PROCESS=1,LMAX/2+1
@@ -216,11 +253,18 @@ CSAM....Read a saved file to set up r and z grid
 
                ENDIF
             ENDDO
+ 768        CONTINUE
          ENDDO
                
       ELSE
          do I=ISTART,IEND,ISKIP
-            
+            call MPI_BCAST(FILE_EXIST,1,MPI_LOGICAL,
+     &           0,MPI_COMM_WORLD,mpierr)
+            IF (FILE_EXIST) THEN
+               CONTINUE
+            ELSE
+               GOTO 769
+            ENDIF
             call MPI_BCAST(RHOSAVE,JMAX2*KMAX2*LMAX,
      &           MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,
      &           mpierr)
@@ -660,7 +704,7 @@ C$OMP END PARALLEL
             ENDIF
                
  400        CONTINUE
-
+ 769        CONTINUE
          ENDDO
       ENDIF
  911  CONTINUE      

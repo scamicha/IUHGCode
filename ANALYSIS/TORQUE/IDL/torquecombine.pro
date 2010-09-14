@@ -4,8 +4,9 @@ PRO torquecombine
  !P.BACKGROUND=255
  !P.COLOR=1
 
- timestart     = 0.d0
- timestop      = 0.d0
+ timestart     = 12.d0
+ timestop      = 19.d0
+ gamma         = 1.66666666d0
 
  x1=5.d0
  x2=45.d0
@@ -156,6 +157,8 @@ PRO torquecombine
 
  CLOSE,lun4
 
+ print, alphag3(117,0,*)
+
  dummy = WHERE((time1 gt timestart) and (time1 lt timestop))
  timesub1   = time1(dummy)
  gravsub1   = grav1(*,*,dummy)
@@ -202,7 +205,7 @@ PRO torquecombine
  alphar1 = TOTAL(alpharsub1,2,/DOUBLE)
  alphar1 = alphar1/dummy
  alphas1 = TOTAL(alphassub1,3,/DOUBLE)
- alhpas1 = alhpas1/dummy
+ alphas1 = alphas1/dummy
  omega1 = TOTAL(omegasub1,2,/DOUBLE)
  omega1 = omega1/dummy
 
@@ -216,7 +219,7 @@ PRO torquecombine
  alphar2 = TOTAL(alpharsub2,2,/DOUBLE)
  alphar2 = alphar2/dummy
  alphas2 = TOTAL(alphassub2,3,/DOUBLE)
- alhpas2 = alhpas2/dummy
+ alphas2 = alphas2/dummy
  omega2 = TOTAL(omegasub2,2,/DOUBLE)
  omega2 = omega2/dummy
 
@@ -230,7 +233,7 @@ PRO torquecombine
  alphar3 = TOTAL(alpharsub3,2,/DOUBLE)
  alphar3 = alphar3/dummy
  alphas3 = TOTAL(alphassub3,3,/DOUBLE)
- alhpas3 = alhpas3/dummy
+ alphas3 = alphas3/dummy
  omega3 = TOTAL(omegasub3,2,/DOUBLE)
  omega3 = omega3/dummy
 
@@ -244,7 +247,7 @@ PRO torquecombine
  alphar4 = TOTAL(alpharsub4,2,/DOUBLE)
  alphar4 = alphar4/dummy
  alphas4 = TOTAL(alphassub4,3,/DOUBLE)
- alhpas4 = alhpas4/dummy
+ alphas4 = alphas4/dummy
  omega4 = TOTAL(omegasub4,2,/DOUBLE)
  omega4 = omega4/dummy
 
@@ -283,12 +286,16 @@ PRO torquecombine
  
  dummy = WHERE((r gt x1) and (r lt x2))
 
- alphag1avg = MEAN(alphag1(dummy))
- alphag2avg = MEAN(alphag2(dummy))
- alphag3avg = MEAN(alphag3(dummy))
- alphag4avg = MEAN(alphag4(dummy))
- alphapg1avg= MEAN(alphapg1(dummy))
- alphapng1avg=MEAN(alphapng1(dummy))
+ print, dummy
+ print, r(dummy)
+ print, alphag3(dummy,0)
+
+ alphag1avg = MEAN(alphag1(dummy,0))
+ alphag2avg = MEAN(alphag2(dummy,0))
+ alphag3avg = MEAN(alphag3(dummy,0))
+ alphag4avg = MEAN(alphag4(dummy,0))
+ alphapg1avg= MEAN(alphapg1(dummy,0))
+ alphapng1avg=MEAN(alphapng1(dummy,0))
  
  alphag1(*) = ALOG10(ABS(alphag1(*)+1.d-12))
  alphag2(*) = ALOG10(ABS(alphag2(*)+1.d-12))
@@ -313,19 +320,19 @@ print,"alpha gamg  = ",alphapg1avg
 alpha06(*) = -1.22
 
 
-LOADCT,ctable
+LOADCT,39
 
 WINDOW,0
 
-PLOT,r(20:(jmax2-3)),alphag1(20:(jmax2-3)),XSTYLE=1, $
+PLOT,r(20:(jmax2-3)),alphag1(20:(jmax2-3),0),XSTYLE=1, $
      YTITLE = "log(abs[!7a!3])", XTITLE ="AU",YCHARSIZE=1.4,  $
     XRANGE=[5,45],THICK=3; YRANGE=[-4,1],XRANGE=[5,45]
-OPLOT,r(20:(jmax2-3)),alphag2(20:(jmax2-3)),THICK=2
-OPLOT,r(20:(jmax2-3)),alphag3(20:(jmax2-3)),THICK=1
+OPLOT,r(20:(jmax2-3)),alphag2(20:(jmax2-3),0),THICK=2
+OPLOT,r(20:(jmax2-3)),alphag3(20:(jmax2-3),0),THICK=1
 OPLOT,r(20:(jmax2-3)),alphapg2(20:(jmax2-3)),THICK=1,linestyle=2
 OPLOT,r(20:(jmax2-3)),alphapng2(20:(jmax2-3)),THICK=1,linestyle=2
 OPLOT,r(20:(jmax2-3)),alpha06(20:(jmax2-3)),LINESTYLE=3
-OPLOT,r(20:(jmax2-3)),alphag4(20:(jmax2-3)),THICK=7
+OPLOT,r(20:(jmax2-3)),alphag4(20:(jmax2-3),0),THICK=7
 ;OPLOT,r(20:(jmax2-3)),alpham(20:(jmax2-3)),color=200
 ;OPLOT,r(20:(jmax2-3)),alphapg(20:(jmax2-3)),THICK=2, LINESTYLE=2
 ;OPLOT,r(20:(jmax2-3)),alphapng(20:(jmax2-3)),THICK=2, LINESTYLE=2
