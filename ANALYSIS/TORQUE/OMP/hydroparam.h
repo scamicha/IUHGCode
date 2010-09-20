@@ -21,7 +21,7 @@ C     outdir the directory where outfile will be written
 
       parameter (datadir = '../../SAVED/')
       parameter (outdir  = './')
-      parameter (outfile = 'decompindirdat.OMP.')
+      parameter (outfile = 'decompP1L128.OMP.')
 
 C     The following parameters are for the EOS
 !    Use H2STAT to select what type of mixture you want.
@@ -50,7 +50,7 @@ C     ISTART is the first file IEND the last one, and ISKIP the interval
 C     between saved files. Also make sure to set JMAX, KMAX, and LMAX 
 C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
 
-      parameter (ISTART=290000,IEND=450000,ISKIP=5000)
+      parameter (ISTART=110007,IEND=385007,ISKIP=5000)
       parameter (kmax= 64, kmax1=kmax+1, kmax2=kmax+2)
       parameter(pot3kmax=kmax,pot3kmax1=pot3kmax+1,pot3kmax2=pot3kmax+2)
 
@@ -58,7 +58,7 @@ C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
       parameter(pot3jmax=jmax,pot3jmax1=pot3jmax+1,pot3jmax2=pot3jmax+2)
 
       parameter (lmax=128, lmax2=lmax/2)
-      parameter (mmax=lmax2)
+      parameter (mmax=8)
 
 c  Minimum radial grid point, for cutting out central star.
       parameter (jmin=11,jmin1=jmin-1,jmin2=jmin-2)

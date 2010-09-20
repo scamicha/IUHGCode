@@ -88,7 +88,7 @@
          ALLOCATE(timearr(size))
 
          count = 0
-         write(filenum,'(I6.6)')start
+         write(filenum,'(I8.8)')start
          rhofile=trim(indir)//'rho3d.'//filenum
          OPEN(UNIT=12,FILE=trim(rhofile),FORM='UNFORMATTED')
 
@@ -120,7 +120,7 @@
 911         CONTINUE
 
             IF(I.lt.finish) THEN
-               WRITE(filenum,'(I6.6)')i+skip
+               WRITE(filenum,'(I8.8)')i+skip
                rhofile = trim(indir)//"rho3d."//filenum
          
                INQUIRE(FILE=trim(rhofile),EXIST=EXISTSTAT)

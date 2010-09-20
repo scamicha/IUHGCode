@@ -96,6 +96,19 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! use for non-mpi      IF(AMCOUNT.EQ.0)THEN
       IF(first_pass.EQ.1)THEN
+
+         call TempFind()
+
+C$OMP DO SCHEDULE(STATIC)
+         DO L=1,LMAX
+            DO K=1,KMAX2
+               DO J=1,jmax2
+                  p(J,K,L) = bkmpcgs*tempk(J,K,L)*rhoconv*rhosave(J,K,L)
+     &                 / (muc*pconv)
+               end do
+            ENDDO
+         ENDDO
+C$OMP END DO
       
          do J = 3, JMAX 
             kepler_fc(J) = sqrt((1.d0-tmassini)/r(J)**3)

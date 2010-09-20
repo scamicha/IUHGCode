@@ -5,6 +5,6 @@
 #OMP_STACKSIZE instead. Also, you should have a 
 #unlimited stack set in your .bashrc
 
-setenv OMP_NUM_THREADS 8
-setenv KMP_STACKSIZE 1G
-./decompose > indirectMPI.out
+setenv OMP_NUM_THREADS 4
+setenv KMP_STACKSIZE 500M
+./decompose_mpi > indirectMPI.out

@@ -4,7 +4,7 @@
  #MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -xHost -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -xHost -mcmodel=medium #-convert big_endian
 
  OMPF95     = mpif90
 
