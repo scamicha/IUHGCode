@@ -66,7 +66,7 @@ C$OMP THREADPRIVATE(/CBLKT/,/BLOKJ1/)
 
       LOGICAL  INIT_BLKTRI,FILE_EXIST
 
-      CHARACTER savedfile*80,phifile*80,filenum*6
+      CHARACTER savedfile*80,phifile*80,filenum*8
       INTEGER I, NUMFILES,PROCESS,m_return,sender
       INTEGER status(MPI_STATUS_SIZE)
 CSAM....Read a saved file to set up r and z grid
@@ -92,7 +92,7 @@ CSAM....Read a saved file to set up r and z grid
 
       IF(myrank.eq.0) THEN
 
-         write (filenum,'(I6.6)')IEND
+         write (filenum,'(I8.8)')IEND
          phifile=trim(outdir)//trim(outfile)//filenum      
 
 
@@ -107,7 +107,7 @@ CSAM....Read a saved file to set up r and z grid
          ALLOCATE(alpha_grav(JMAX2,LMAX2+1,NUMFILES))
          ALLOCATE(alpha_sum(JMAX2,LMAX2+1,NUMFILES))
 
-         write (filenum,'(I6.6)')ISTART
+         write (filenum,'(I8.8)')ISTART
          savedfile=trim(datadir)//'saved.'//filenum
          INQUIRE(file=savedfile, exist=FILE_EXIST)
          IF (FILE_EXIST) THEN
@@ -136,7 +136,7 @@ CSAM....Read a saved file to set up r and z grid
                CONTINUE
             ELSE
                IF (I.lt.IEND) THEN
-                  write (filenum,'(I6.6)')I+ISKIP             
+                  write (filenum,'(I8.8)')I+ISKIP             
                   savedfile=trim(datadir)//'saved.'//filenum
                   INQUIRE(file=savedfile,exist=FILE_EXIST)
                   IF (FILE_EXIST) THEN
@@ -200,7 +200,7 @@ CSAM....Read a saved file to set up r and z grid
             AMCOUNT = AMCOUNT-1
             answer_width = 5*JMAX2
             IF (I.lt.IEND) THEN
-               write (filenum,'(I6.6)')I+ISKIP             
+               write (filenum,'(I8.8)')I+ISKIP             
                savedfile=trim(datadir)//'saved.'//filenum
                INQUIRE(file=savedfile,exist=FILE_EXIST)
                IF (FILE_EXIST) THEN

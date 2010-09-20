@@ -4,7 +4,7 @@
  #MAKEFILE = Makefile.intel
 
 #===============================================================================
- TARCH      = -r8 -axsse3 -mcmodel=medium
+ TARCH      = -r8 -axsse3 -mcmodel=medium -convert big_endian
 
  OMPF95     = ifort
 
