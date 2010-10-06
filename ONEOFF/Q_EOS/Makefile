@@ -1,6 +1,6 @@
 # -*-Makefile-*-
 #===============================================================================
- TARCH      = -r8 -axsse3 -mcmodel=medium -convert big_endian
+ TARCH      = -r8 -axsse3 -mcmodel=medium #-convert big_endian
 
  OMPF95     = ifort
 
@@ -35,5 +35,5 @@ clean:
 
 qplot_eos.o: qplot_eos.f90
 	$(FC) $(CFLAGS) -c $<
-initengtable.o: initengtable.f
+initengtable.o: initengtable.f90
 	$(FC) $(CFLAGS) -c $<
