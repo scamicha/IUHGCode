@@ -11,12 +11,12 @@ PROGRAM  QPLOT_EOS
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
-  REAL(DOUBLE) :: dr,dz,elost,sound,ommax
   REAL(DOUBLE) :: time_begin,time_end
-  REAL(DOUBLE), DIMENSION(:,:),ALLOCATABLE :: qomega,qkappa
+  REAL(DOUBLE) :: dr,dz,elost,sound,ommax,time0,totengtmp
+  REAL(DOUBLE), DIMENSION(:,:),ALLOCATABLE :: qomega,qkappa,colcool
   REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: timearr,omegavg,csavg,sigmavg
-  REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: kappa
-  CHARACTER :: savedfile*80,filenum*8,qfile*80
+  REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: kappa,toteng,vol
+  CHARACTER :: savedfile*80,filenum*8,qfile*80,coolfile*80
   LOGICAL FILE_EXIST
 
   CALL MPI_INIT(IERR)
@@ -27,20 +27,30 @@ PROGRAM  QPLOT_EOS
   
   ALLOCATE(qomega(JMAX2,NUMFILES))
   ALLOCATE(qkappa(JMAX2,NUMFILES))
+  ALLOCATE(colcool(JMAX2,NUMFILES))
   ALLOCATE(timearr(NUMFILES))
+  ALLOCATE(toteng(NUMFILES))
   ALLOCATE(omegavg(JMAX2))
   ALLOCATE(csavg(JMAX2))
   ALLOCATE(sigmavg(JMAX2))
   ALLOCATE(kappa(JMAX2))
+  ALLOCATE(vol(JMAX2))
 
   COUNTER = 0
 
   DO I=ISTART,IEND,ISKIP
      WRITE(filenum,'(I8.8)')I
      savedfile=trim(datadir)//'saved.'//filenum
+     coolfile=trim(datadir)//'coolheat_full.'//filenum
      INQUIRE(file=savedfile,exist=FILE_EXIST)
      IF(FILE_EXIST) THEN
-        OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',  &
+        INQUIRE(file=coolfile,exist=FILE_EXIST)
+     ELSE
+        CYCLE
+     ENDIF
+        
+     IF(FILE_EXIST) THEN
+        OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',    &
         STATUS="OLD")
       
         READ(8) S
@@ -51,8 +61,24 @@ PROGRAM  QPLOT_EOS
         READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
         read(8) tmassini
         CLOSE(8)
-               
-        print*, 'Opened file: ',trim(savedfile)
+
+        OPEN(UNIT=9,FILE=trim(coolfile),FORM='UNFORMATTED',      &
+             STATUS='OLD')
+
+        READ(9) divflux
+        READ(9) lambda
+        READ(9) hgamma
+        READ(9) igamma
+        READ(9) tauross
+        READ(9) TempK
+        READ(9) TeffK
+        READ(9) TphK
+        READ(9) time1 
+        CLOSE(9)
+        
+        IF (ABS((time/time0)-1).gt.0.01) STOP
+
+        print*, 'Opened file: ',trim(savedfile),' and ',trim(coolfile)
         print*, '   Your time is ', time/torp
      ELSE
         CYCLE
@@ -75,7 +101,17 @@ PROGRAM  QPLOT_EOS
      timearr(COUNTER) = time/torp
 
      CALL TEMPFIND()
+
+     DO J=2,JMAX1
+        vol(J) = 
 !$OMP PARALLEL DEFAULT(SHARED)
+
+     totengtmp = 0.d0
+!$OMP DO REDUCTION(+:totengtmp) FIRSTPRIVATE(vol)
+     DO L=1,LMAX
+        DO K=2,KMAX1
+           DO J=2,JMAX1
+              totengtmp = totengtmp + eps(J,K,L)
 
 !$OMP DO SCHEDULE(STATIC)
          DO J=1,JMAX2
