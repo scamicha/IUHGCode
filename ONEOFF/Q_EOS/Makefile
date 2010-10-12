@@ -2,9 +2,9 @@
 #===============================================================================
  TARCH      = -r8 -axsse3 -mcmodel=medium #-convert big_endian
 
- OMPF95     = ifort
+ OMPF95     = mpif90
 
- F90FLAGS   = -O3 -pad -align all -ipo -no-prec-div -nocheck -shared-intel -openmp
+ F90FLAGS   = -O3 -pad -align all -ipo -no-prec-div -nocheck -shared-intel# -openmp
 
  LIBS       = $(F90FLAGS) $(TARCH)
 

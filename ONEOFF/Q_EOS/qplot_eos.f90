@@ -4,18 +4,24 @@ PROGRAM  QPLOT_EOS
 
   INCLUDE 'hydroparam.h'
   INCLUDE 'globals.h'
+  INCLUDE 'mpif.h'
 
   integer, parameter :: double = selected_real_kind(15,300)
   REAL(DOUBLE), PARAMETER :: torp = 1605.63
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
-  INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ
+  INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
   REAL(DOUBLE) :: dr,dz,elost,sound,ommax
+  REAL(DOUBLE) :: time_begin,time_end
   REAL(DOUBLE), DIMENSION(:,:),ALLOCATABLE :: qomega,qkappa
   REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: timearr,omegavg,csavg,sigmavg
   REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: kappa
   CHARACTER :: savedfile*80,filenum*8,qfile*80
   LOGICAL FILE_EXIST
+
+  CALL MPI_INIT(IERR)
+
+  time_begin = MPI_Wtime()
 
   NUMFILES = ((IEND - ISTART)/ISKIP) + 1
   
@@ -26,9 +32,6 @@ PROGRAM  QPLOT_EOS
   ALLOCATE(csavg(JMAX2))
   ALLOCATE(sigmavg(JMAX2))
   ALLOCATE(kappa(JMAX2))
-
-  CALL INIT()
-  CALL INITENGTABLE()
 
   COUNTER = 0
 
@@ -61,10 +64,11 @@ PROGRAM  QPLOT_EOS
 
      IF (counter == 0) then
         DO j = 1,jmax2 
-           r(j) = (FLOAT(j-1)*dr+0.5*dr)*rdiskau/(FLOAT(JREQ-1)*dr  &
-           +0.5*dr)
-           rhf(J) = r(J)*(FLOAT(JREQ-1)*dr+0.5*dr)/rdiskau
+           r(j) = (FLOAT(j-2)*dr)
+           rhf(J) = r(J)+0.5*dr
         ENDDO
+        CALL INIT()
+        CALL INITENGTABLE()
      ENDIF
 
      COUNTER = COUNTER + 1
@@ -91,7 +95,7 @@ PROGRAM  QPLOT_EOS
            DO K=2,KMAX1
               sigmavg(J) = sigmavg(J) + rho(J,K,L)*dz
            ENDDO
-           omegavg(J) = omegavg(J)+ a(j,k,l)/rho(j,k,l)/rhf(j)**2
+           omegavg(J) = omegavg(J)+ a(j,2,l)/rho(j,2,l)/rhf(j)**2
            csavg(J) = csavg(J) + sqrt(gamma1(J,2,L)*p(J,2,L)/rho(J,2,L))
         ENDDO
         sigmavg(J) = 2.d0*sigmavg(J)/DBLE(LMAX)
@@ -100,7 +104,7 @@ PROGRAM  QPLOT_EOS
      ENDDO
 !$OMP END DO
 
-!$OMP DO SCHEDULE(STATIC)
+!$OMP DO SCHEDULE(STATIC) FIRSTPRIVATE(omegavg)
      DO J=3,JMAX-1
         kappa(j)=sqrt(ABS(rhf(j)*omegavg(j)*(omegavg(j+1)-   &
         omegavg(j-1))/dr + 4.d0*omegavg(j)**2))
@@ -113,6 +117,19 @@ PROGRAM  QPLOT_EOS
 
   ENDDO
 
+!$OMP PARALLEL DO
+
+  DO J=1,JMAX2
+     r(J) = rhf(j)*rdiskau/rhf(JREQ)
+  ENDDO
+!$OMP END PARALLEL DO
+
+  time_end = MPI_Wtime()
+  
+  CALL MPI_Finalize(IERR)
+
+  print*,'Execution time ',time_end-time_begin,' seconds.'
+  
   write (filenum,'(I8.8)')IEND
   qfile=trim(outdir)//trim(outfile)//filenum
 
