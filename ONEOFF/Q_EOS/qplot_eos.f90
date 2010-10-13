@@ -7,11 +7,11 @@ PROGRAM  QPLOT_EOS
   INCLUDE 'mpif.h'
 
   integer, parameter :: double = selected_real_kind(15,300)
-  REAL(DOUBLE), PARAMETER :: torp = 1605.63
+  REAL(DOUBLE), PARAMETER :: torp = 1605.63,phylim=1.d-8
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
-  REAL(DOUBLE) :: time_begin,time_end,engtmp,dummy
+  REAL(DOUBLE) :: time_begin,time_end,engtmp,dummy,limit
   REAL(DOUBLE) :: dr,dz,elost,sound,ommax,time0,totengtmp,cooltmp
   REAL(DOUBLE), DIMENSION(:,:),ALLOCATABLE :: qomega,qkappa,colcool
   REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: timearr,omegavg,csavg,sigmavg
@@ -85,6 +85,7 @@ PROGRAM  QPLOT_EOS
      ENDIF
      dr = ROF3N
      dz = ZOF3N
+     limit = phylim*den
      
      IF ((time < time1*torp).or.(time > time2*torp)) CYCLE 
 
@@ -125,8 +126,10 @@ PROGRAM  QPLOT_EOS
            engtmp  = 0.d0
            cooltmp = 0.d0
            DO K=2,KMAX1
-              engtmp = engtmp + eps(J,K,L)
-              cooltmp = cooltmp + lambda(J,K,L) + divflux(J,K,L)
+              IF(rho(J,K,L).ge.limit)THEN
+                 engtmp = engtmp + eps(J,K,L)
+                 cooltmp = cooltmp + lambda(J,K,L) + divflux(J,K,L)
+              ENDIF
            ENDDO
            colcool(J,COUNTER) = colcool(J,COUNTER) + engtmp/cooltmp
         ENDDO
