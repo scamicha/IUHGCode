@@ -22,7 +22,7 @@
       parameter (datadir = '../WAN_DATA/')
       parameter (outdir  = './')
       parameter (outfile = 'Qplot_baseline.')
-      real*8, PARAMETER :: time1 = 10.d0, time2 = 20.d0
+      real*8, PARAMETER :: time1 = 10.d0, time2 = 21.d0
 
 !     The following parameters are for the EOS
 !    Use H2STAT to select what type of mixture you want.
@@ -51,7 +51,7 @@
 !     between saved files. Also make sure to set JMAX, KMAX, and LMAX 
 !     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
 
-      parameter (ISTART=1005000,IEND=1050000,ISKIP=5000)
+      parameter (ISTART=1000000,IEND=2050000,ISKIP=5000)
       parameter (kmax= 64, kmax1=kmax+1, kmax2=kmax+2)
       parameter(pot3kmax=kmax,pot3kmax1=pot3kmax+1,pot3kmax2=pot3kmax+2)
 
