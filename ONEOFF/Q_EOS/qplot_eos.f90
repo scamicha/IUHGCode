@@ -11,7 +11,7 @@ PROGRAM  QPLOT_EOS
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
-  REAL(DOUBLE) :: time_begin,time_end,engtmp
+  REAL(DOUBLE) :: time_begin,time_end,engtmp,dummy
   REAL(DOUBLE) :: dr,dz,elost,sound,ommax,time0,totengtmp,cooltmp
   REAL(DOUBLE), DIMENSION(:,:),ALLOCATABLE :: qomega,qkappa,colcool
   REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: timearr,omegavg,csavg,sigmavg
@@ -67,9 +67,9 @@ PROGRAM  QPLOT_EOS
 
         READ(9) divflux
         READ(9) lambda
-        READ(9) hgamma
+        READ(9) hgamma 
         READ(9) igamma
-        READ(9) tauross
+        READ(9) dummy
         READ(9) TempK
         READ(9) TeffK
         READ(9) TphK
