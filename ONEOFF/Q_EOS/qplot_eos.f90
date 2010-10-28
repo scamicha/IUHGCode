@@ -121,8 +121,8 @@ PROGRAM  QPLOT_EOS
      
      engtmp  = 0.d0
      cooltmp = 0.d0
-     DO L=1,LMAX
-        DO J=2,JMAX1
+     DO J=2,JMAX1
+        DO L=1,LMAX
            engtmp  = 0.d0
            cooltmp = 0.d0
            DO K=2,KMAX1
@@ -133,8 +133,8 @@ PROGRAM  QPLOT_EOS
            ENDDO
            colcool(J,COUNTER) = colcool(J,COUNTER) + engtmp/cooltmp
         ENDDO
-     ENDDO
      colcool(J,COUNTER) = colcool(J,COUNTER)/LMAX/torp
+     ENDDO
 
 !$OMP DO SCHEDULE(STATIC)
          DO J=1,JMAX2
