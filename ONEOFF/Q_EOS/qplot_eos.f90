@@ -7,7 +7,7 @@ PROGRAM  QPLOT_EOS
   INCLUDE 'mpif.h'
 
   integer, parameter :: double = selected_real_kind(15,300)
-  REAL(DOUBLE), PARAMETER :: torp = 1605.63,phylim=1.d-8
+  REAL(DOUBLE), PARAMETER :: torp = 1605.63
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
@@ -128,7 +128,7 @@ PROGRAM  QPLOT_EOS
            DO K=2,KMAX1
               IF(rho(J,K,L).ge.limit)THEN
                  engtmp = engtmp + eps(J,K,L)
-                 cooltmp = cooltmp + lambda(J,K,L) + divflux(J,K,L)
+                 cooltmp = cooltmp + divflux(J,K,L)
               ENDIF
            ENDDO
            colcool(J,COUNTER) = colcool(J,COUNTER) + engtmp/cooltmp
