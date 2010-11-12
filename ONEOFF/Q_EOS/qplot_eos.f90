@@ -122,18 +122,17 @@ PROGRAM  QPLOT_EOS
      engtmp  = 0.d0
      cooltmp = 0.d0
      DO J=2,JMAX1
+        engtmp  = 0.d0
+        cooltmp = 0.d0
         DO L=1,LMAX
-           engtmp  = 0.d0
-           cooltmp = 0.d0
            DO K=2,KMAX1
               IF(rho(J,K,L).ge.limit)THEN
                  engtmp = engtmp + eps(J,K,L)
                  cooltmp = cooltmp + lambda(J,K,L) + divflux(J,K,L)
               ENDIF
            ENDDO
-           colcool(J,COUNTER) = colcool(J,COUNTER) + engtmp/cooltmp
         ENDDO
-     colcool(J,COUNTER) = colcool(J,COUNTER)/LMAX/torp
+        colcool(J,COUNTER) = engtmp/cooltmp
      ENDDO
 
 !$OMP DO SCHEDULE(STATIC)
