@@ -94,8 +94,21 @@ PRO PERIODPLOT
   READ,OUTPUT,PROMPT='Press 1 to save this image. '
   IF (OUTPUT EQ 1) THEN BEGIN
      READ,OUTFILE,PROMPT='Please enter the file name. '
-     image=tvrd(true=3)
-     write_jpeg,OUTFILE,image,QUALITY=100,TRUE=3
+;     image=tvrd(true=3)
+;     write_jpeg,OUTFILE,image,QUALITY=100,TRUE=3
+     SET_PLOT,'PS'
+     LOADCT,42
+     DEVICE,filename=OUTFILE,/COLOR,/ENCAPSULATED
+
+      CONTOUR,valplot,freqplot,rads,YRANGE=YRANGE,LEVELS=LEVEL,      $
+       YSTYLE=1,TITLE=titlestr,color=0,background=255,              $
+       XTITLE='Pattern Speed (1/ORP)',YTITLE='R(AU)',XRANGE=XRANGE, $
+       XSTYLE=1,/FILL
+                      
+     OPLOT,omega,rads,color=0
+     OPLOT,omega+(kappa/DOUBLE(modenum)),rads,color=0
+     OPLOT,omega-(kappa/DOUBLE(modenum)),rads,color=0
+     DEVICE,/CLOSE
   ENDIF
 
 END
