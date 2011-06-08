@@ -90,7 +90,8 @@ C guarantees they will go on the heap. ! COMMON BLOCK REMOVED. ACB
      &       TT(JMAX2,KMAX2,LMAX),
      &       AA(JMAX2,KMAX2,LMAX),
      &       RRHO(JMAX2,KMAX2,LMAX),
-     &       EEPS(JMAX2,KMAX2,LMAX)
+     &       EEPS(JMAX2,KMAX2,LMAX),
+     &       Tauross(jmax2,kmax2,lmax)
 
       CHARACTER  np*2,tw*3
       CHARACTER  tim*8,rhofile*80,tempfile*80,starfile*80,
@@ -1016,7 +1017,17 @@ C...Diagnostic Information for COM and M=1 power...
             if (jmin.gt.2) write(8) tmassini,tmass,tmassadd,tmassout
      &        ,tmassacc,totcool,totdflux,totheat,totirr,etotfl,eflufftot
             if (planet) write(8) planetx,planety,planetvx,planetvy
-            close(8)
+            close(8
+
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(k,j,l)
+            do l=1,lmax
+               do j=1,jmax2
+                  do k=1,kmax2
+                     tauross(j,k,l)=tau(j,k,l,1)
+                  enddo
+               enddo
+            enddo
+!$OMP END PARALLEL DO)
 
             epsfull=trim(outpath)//'coolheat_full.'//index
             open(unit=29,file=epsfull,form='unformatted')
