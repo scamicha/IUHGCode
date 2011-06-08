@@ -2,10 +2,11 @@ PRO ifof, start, finish
 
   JMAX = 512
   KMAX = 64
-  LMAX = 128
+  LMAX = 512
   swap_endian = 1
-  rhoprefix = './RHOTEMP/rho3d.'
+  rhoprefix = './G1.6TC2P1L512/rho3d.'
   rhofile = ''
+  OUTFILE = ''
   torp  = 1605.63
   dr  = 0.2021807d0
   jreq = 250L
@@ -102,9 +103,10 @@ PRO ifof, start, finish
 
   DEVICE,DECOMPOSED=0
   LOADCT,42
-      
-  PLOT,RHF(1:JMAX),MDOT(1:JMAX),XRANGE=[0,60],XSTYLE=1,TITLE=titlestr, $
-       SUBTITLE= subtitlestr,COLOR=0,BACKGROUND=255
+  WINDOW,0,RETAIN=2    
+  PLOT,RHF(1:JMAX),MDOT(1:JMAX),XRANGE=[0,60],YRANGE=[-2.d-6,3.d-6],  $
+       XSTYLE=1,TITLE=titlestr,SUBTITLE= subtitlestr,COLOR=0,   $
+       BACKGROUND=255,CHARSIZE=1.5
   
   READ,OUTPUT,PROMPT='Press 1 to save this image. '
   IF (OUTPUT EQ 1) THEN BEGIN
