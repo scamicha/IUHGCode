@@ -57,7 +57,7 @@ C     correctly. pot3jmax and pot3kmax should be the same as JMAX and KMAX
       parameter (jmax=512, jmax1=jmax+1, jmax2=jmax+2)
       parameter(pot3jmax=jmax,pot3jmax1=pot3jmax+1,pot3jmax2=pot3jmax+2)
 
-      parameter (lmax=128, lmax2=lmax/2)
+      parameter (lmax=512, lmax2=lmax/2)
       parameter (mmax=8)
 
 c  Minimum radial grid point, for cutting out central star.
