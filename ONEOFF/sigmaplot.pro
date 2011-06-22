@@ -1,24 +1,32 @@
 ; This program makes and plots surface density profiles and will fit a
 ; power law to the surface density if you want it to
 
- PRO sigmaplot, filenum, MIN=RMIN, MAX=RMAX, SWAP=swap_endian, PREFIX=prefix, OVER=overplot
+ PRO sigmaplot, filenum, MIN=RMIN, MAX=RMAX, SWAP=swap_endian, PREFIX=prefix, OVER=overplot, $
+	STARTF=startfit, ENDF=endfit, ZOOM=sigmazoom
 
  !P.COLOR = 0
  !P.BACKGROUND = 255
 ; !P.MULTI = [0,0,3,0,0]
 
+ IF N_Elements(swap_endian) EQ 0 THEN swap_endian = 0L
  IF N_Elements(RMIN) EQ 0 THEN RMIN = 10.d0
  IF N_Elements(RMAX) EQ 0 THEN RMAX = 40.d0
- IF N_Elements(prefix) EQ 0 THEN prefix = './rho3d'
+ IF N_Elements(overplot) EQ 0 THEN overplot = 0L
+ IF N_Elements(startfit) EQ 0 THEN startfit = 15.d0
+ IF N_Elements(endfit) EQ 0 THEN endfit = 40.d0
+ IF N_Elements(sigmazoom) EQ 0 THEN sigmazoom = 0.7477962d0
+ IF N_Elements(prefix) EQ 0 THEN prefix = './saved'
 
  JMAX    = 512L
  KMAX    = 64L
  LMAX    = 512L
+ JREQ    = 0L
  fitsize = 0L
  sigconv = 0d0
  time    = 0d0
+ tconv   = 1605.63d0
  startjfit=0L
- endjit  = 0L
+ endjfit  = 0L
  pi      = 3.1415926353892d0
  au      = 40.d0
  jreqs   = 0L
@@ -45,9 +53,6 @@
  rplot      = DBLARR(jmax+2) 
  qminarr    = DBLARR(jmax+2)
  dphi       = 2.d0*pi/FLOAT(lmax)
- colorstep  = 256/(((rendend-rendstart)/rendskip)+1)
- colorstep  = FIX(colorstep)
- colorcount = 1
  stringtime = ""
  linetype   = 0
  qmin       = 0L
@@ -63,6 +68,7 @@
  dphi       = 2.d0*pi/FLOAT(lmax)
  height     = DBLARR(jmax+2,lmax)
  heightavg  = DBLARR(jmax+2)
+ result   = DBLARR(2)
  
 
 
@@ -75,7 +81,7 @@
  
  WINDOW,0
 
- getfile = STRING(prefix,".",filenum,FORMAT = '(A,A1,I6.6)') 
+ getfile = STRING(prefix,".",filenum,FORMAT = '(A,A1,I8.8)') 
 
  IF(swap_endian eq 1) THEN BEGIN
     OPENR,lun1,getfile,/F77_UNFORMATTED,/SWAP_ENDIAN,/GET_LUN
@@ -102,10 +108,10 @@
 
  FOR j=1, jmax+1 DO BEGIN
     rplot(j)=((FLOAT(j-1)+0.5d0))*au/(FLOAT(jreq-2))
-    rpoly(j) = (FLOAT(J)-0.5d0)*dr
+    rhf(j) = (FLOAT(J)-0.5d0)*dr
  ENDFOR
 
- rconv = au/rpoly(jreq-1)
+ rconv = au/rhf(jreq-1)
 
  FOR j=1,jmax-1 DO BEGIN
     FOR l=0,lmax-1 DO BEGIN
@@ -114,7 +120,8 @@
        FOR k = 1, kmax-1 DO BEGIN
           sigma(j,l)=sigma(j,l)+rho(j,k,l)*dz
        ENDFOR
-       height(j,l) = sigma(j,l)/(2.d0*rho(j,1,l))
+       rhomid = rho(j,2,l)-((rhf(2)/(rhf(1)-rhf(2)))*(rho(j,1,l)-rho(j,2,l)))
+       height(j,l) = sigma(j,l)/(2.d0*rhomid)
     ENDFOR
  ENDFOR
    
@@ -127,10 +134,10 @@
     ENDFOR
     sigmavg(j)=2.0*sigconv*sigmavg(j)/FLOAT(lmax)
     IF(overplot ne 1) THEN BEGIN
-       sigmavg(j)=alog10(sigmavg(j))
+;       sigmavg(j)=alog10(sigmavg(j))
     ENDIF
  ENDFOR
- heightavg = heightavg*rconv/FLOAT(lmax)
+ heightavg = heightavg*rconv/FLOAT(lmax)/rplot
  print, "sig r 5 = ", sigmavg(32)/sigconv
  print, "sig r 10 = ", sigmavg(62)/sigconv
 
@@ -174,13 +181,13 @@
  slopestr = string("Slope = ",result(1),FORMAT='(A,f6.3)')
  minsig=MIN(sigmavg)
  maxsig=MAX(sigmavg)
- PLOT,rplot(*),sigmavg(*),XSTYLE=9,YSTYLE=9,     $
-      XRANGE=[rplot(25),sigmazoom*rplot(jmax)],     $
-      YRANGE=[0,maxsig+.75],XTITLE=['R(AU)'],       $
+ PLOT,rplot(*),sigmavg(*),XSTYLE=1,YSTYLE=1,     $
+      XRANGE=[rmin,rmax],     $
+      YRANGE=[0,1.1*maxsig],XTITLE=['R(AU)'],       $
       YTITLE=['log !I10!N !7R !3(g/cm!E2!N)'],      $
-      YCHARSIZE=2,XCHARSIZE=2,YMARGIN=[7,2],color=1,$
-      TITLE=modelstr
- IF(overplot eq 1) THEN BEGIN
+      YCHARSIZE=2,XCHARSIZE=2,YMARGIN=[7,2],color=1
+ 
+IF(overplot eq 1) THEN BEGIN
     oplot,rplot(*),sigmaover(*),MIN_VALUE=1,LINESTYLE=2,color=1
  ENDIF
 ;     XYOUTS,(0.78*sigmazoom*rplot(jmax)),maxsig,titlestr,/DATA
@@ -189,12 +196,13 @@
  XYOUTS,(0.78*sigmazoom*rplot(jmax)),1.05*maxsig,slopestr,/DATA
 
  WINDOW,1
+ 
+ print, heightavg
 
- PLOT, rplot(*),heightavg(*)
+ PLOT,rplot(*),heightavg(*),XSTYLE=1,YSTYLE=1,XRANGE=[rmin,rmax],color=1,YRANGE=[0,0.1]
 
 ; image=tvrd()
 ; outfile  = STRING('sigma.',rend,".jpg",FORMAT='(A,I0,A4)')
 ; WRITE_JPEG,outfile,image,quality=100
 
- RETURN
  END
