@@ -1,7 +1,7 @@
 #-*-Makefile-*-
 # makefile for the 3-D astrophysical hydrodynamics code.
 
- MAKEFILE = Makefile
+ MAKEFILE = Makefile.pathscale
 
 #===============================================================================
  TARCH      = -mcmodel=medium -march=opteron
@@ -18,7 +18,7 @@
  .f.o:
 	$(OMPF95) $(F90FLAGS) -c $*.f
 
- OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o
+ OBJ = fft.o dcomp.o blktri.o torqueout.o boundary.o initengtable.o
 
 #===============================================================================
 #                        EXECUTABLES
@@ -53,4 +53,7 @@ torqueout.o: torqueout.F
 	$(FC) $(CFLAGS) -c $<
 
 boundary.o: boundary.f
+	$(FC) $(CFLAGS) -c $<
+
+initengtable.o: initengtable.f
 	$(FC) $(CFLAGS) -c $<

@@ -7,7 +7,7 @@ PROGRAM  QPLOT_EOS
   INCLUDE 'mpif.h'
 
   integer, parameter :: double = selected_real_kind(15,300)
-  REAL(DOUBLE), PARAMETER :: torp = 1605.63
+  REAL(DOUBLE), PARAMETER :: phylim=1.d-8
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
@@ -43,7 +43,7 @@ PROGRAM  QPLOT_EOS
      savedfile=trim(datadir)//'saved.'//filenum
      coolfile=trim(datadir)//'coolheat_full.'//filenum
      INQUIRE(file=savedfile,exist=FILE_EXIST)
-     IF(FILE_EXIST) THEN
+     IF(FILE_EXIST .AND. (.NOT. CONST_COOL)) THEN
         INQUIRE(file=coolfile,exist=FILE_EXIST)
      ELSE
         CYCLE
@@ -61,25 +61,30 @@ PROGRAM  QPLOT_EOS
         READ(8) ROF3N,ZOF3N,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
         read(8) tmassini
         CLOSE(8)
-
-        OPEN(UNIT=9,FILE=trim(coolfile),FORM='UNFORMATTED',      &
-             STATUS='OLD')
-
-        READ(9) divflux
-        READ(9) lambda
-        READ(9) hgamma 
-        READ(9) igamma
-        READ(9) dummy
-        READ(9) TempK
-        READ(9) TeffK
-        READ(9) TphK
-        READ(9) time0
-        CLOSE(9)
         
-        IF (ABS((time/time0)-1).gt.0.01) STOP
+        IF(.NOT. CONST_COOL) THEN
+           OPEN(UNIT=9,FILE=trim(coolfile),FORM='UNFORMATTED',      &
+                STATUS='OLD')
 
-        print*, 'Opened file: ',trim(savedfile),' and ',trim(coolfile)
-        print*, '   Your time is ', time/torp
+           READ(9) divflux
+           READ(9) lambda
+           READ(9) hgamma 
+           READ(9) igamma
+           READ(9) dummy
+           READ(9) TempK
+           READ(9) TeffK
+           READ(9) TphK
+           READ(9) time0
+           CLOSE(9)
+        
+           IF (ABS((time/time0)-1).gt.0.01) STOP
+
+           print*, 'Opened file: ',trim(savedfile),' and ',trim(coolfile)
+           print*, '   Your time is ', time/torp
+        ELSE
+           print*, 'Opened file: ',trim(savedfile)
+           print*, '   Your time is ', time/torp           
+        ENDIF
      ELSE
         CYCLE
      ENDIF
