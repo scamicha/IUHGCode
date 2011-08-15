@@ -7,7 +7,6 @@ PROGRAM  QPLOT_EOS
   INCLUDE 'mpif.h'
 
   integer, parameter :: double = selected_real_kind(15,300)
-  REAL(DOUBLE), PARAMETER :: phylim=1.d-8
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
