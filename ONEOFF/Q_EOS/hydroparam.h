@@ -36,7 +36,9 @@
 !    please make sure you use the same values from the hydro run!!!
 
 !     CHANGE THESE
+      logical,parameter :: CONST_COOL = .true.
       integer,parameter :: H2STAT=2
+      real*8, parameter :: cct=2.,torp=1605.63
       real*8, parameter :: ac = 1.d0, bc = 3.d0
       real*8, parameter :: xabun = .73d0,yabun=.25d0,zabun=.02d0
       real*8, parameter :: gamma = 1.66666666666667d0,xn = 1.5d0
