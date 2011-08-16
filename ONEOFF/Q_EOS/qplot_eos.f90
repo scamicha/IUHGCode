@@ -38,16 +38,18 @@ PROGRAM  QPLOT_EOS
   COUNTER = 0
 
   DO I=ISTART,IEND,ISKIP
-     WRITE(filenum,'(I8.8)')I
+     WRITE(filenum,'(I6.6)')I
      savedfile=trim(datadir)//'saved.'//filenum
      coolfile=trim(datadir)//'coolheat_full.'//filenum
      INQUIRE(file=savedfile,exist=FILE_EXIST)
      IF(FILE_EXIST .AND. (.NOT. CONST_COOL)) THEN
         INQUIRE(file=coolfile,exist=FILE_EXIST)
-     ELSE
+     ELSE IF(.NOT. FILE_EXIST) THEN
         CYCLE
+     ELSE
+        CONTINUE
      ENDIF
-        
+     
      IF(FILE_EXIST) THEN
         OPEN(UNIT=8, FILE=trim(savedfile),FORM='UNFORMATTED',    &
         STATUS="OLD")
@@ -79,10 +81,10 @@ PROGRAM  QPLOT_EOS
            IF (ABS((time/time0)-1).gt.0.01) STOP
 
            print*, 'Opened file: ',trim(savedfile),' and ',trim(coolfile)
-           print*, '   Your time is ', time/torp
+           print*, '   Your time is ', time/torp,' Counter = ',counter
         ELSE
            print*, 'Opened file: ',trim(savedfile)
-           print*, '   Your time is ', time/torp           
+           print*, '   Your time is ', time/torp,' Counter = ',counter
         ENDIF
      ELSE
         CYCLE
@@ -108,7 +110,7 @@ PROGRAM  QPLOT_EOS
      CALL TEMPFIND()
 
      DO J=2,JMAX1
-        vol(J) = pi*(r(J+1)**2-r(J)**2)*dz
+        vol(J) = pi*(r(J+1)**2-r(J)**2)*dz/DBLE(LMAX)
      ENDDO
 !$OMP PARALLEL DEFAULT(SHARED)
 
@@ -193,7 +195,7 @@ PROGRAM  QPLOT_EOS
 
   print*,'Execution time ',time_end-time_begin,' seconds.'
   
-  write (filenum,'(I8.8)')IEND
+  write (filenum,'(I6.6)')IEND
   qfile=trim(outdir)//trim(outfile)//filenum
 
   OPEN(UNIT=15,FILE=qfile,FORM='UNFORMATTED')
