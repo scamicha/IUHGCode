@@ -9,8 +9,9 @@ PROGRAM  QPLOT_EOS
   integer, parameter :: double = selected_real_kind(15,300)
   REAL(DOUBLE), PARAMETER :: pi = 3.14159265358979323846d0
   REAL(DOUBLE), PARAMETER :: twopi = 2.d0*pi
+  REAL(DOUBLE), PARAMETER :: RMIN = 10.d0, RMAX = 40.d0
   INTEGER I,NUMFILES,COUNTER,J,K,L,JREQ,IERR
-  REAL(DOUBLE) :: time_begin,time_end,engtmp,dummy,limit
+  REAL(DOUBLE) :: time_begin,time_end,engtmp,dummy,limit,rconv
   REAL(DOUBLE) :: dr,dz,elost,sound,ommax,time0,totengtmp,cooltmp
   REAL(DOUBLE), DIMENSION(:,:),ALLOCATABLE :: qomega,qkappa,colcool
   REAL(DOUBLE), DIMENSION(:),ALLOCATABLE :: timearr,omegavg,csavg,sigmavg
@@ -102,6 +103,7 @@ PROGRAM  QPLOT_EOS
         ENDDO
         CALL INIT()
         CALL INITENGTABLE()
+        rconv = Rdiskau/(r(JREQ-2))
      ENDIF
 
      COUNTER = COUNTER + 1
@@ -119,7 +121,9 @@ PROGRAM  QPLOT_EOS
      DO L=1,LMAX
         DO K=2,KMAX1
            DO J=2,JMAX1
-              totengtmp = totengtmp + eps(J,K,L)*vol(J)
+              IF((rhf(j)*rconv.gt.RMIN).and.(rhf(j)*rconv.lt.RMAX))THEN
+                 totengtmp = totengtmp + eps(J,K,L)*vol(J)
+              ENDIF
            ENDDO
         ENDDO
      ENDDO

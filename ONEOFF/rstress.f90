@@ -15,8 +15,9 @@ program rstress
 
  real(KIND=8) :: dz,dr,torp,sconv,avgvphi,avgvr,mass,elost,den,sound,ommax
  real(KIND=8) :: y1, y2, y3, y4, t, u, angle, dphi, pi, ir, jr, rr,time, bg
- real(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot
+ real(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot,rconv
  character :: filein*72, fileout*72,filenum*6,dum(13)*72
+ LOGICAL :: FILE_EXIST
 
   CALL GetArg(1,dum(1))
   CALL GetArg(2,dum(2))
@@ -123,11 +124,15 @@ program rstress
   mstar = 1.d0
   rdiskau = 40.d0
 
- I = ISTART
- do while ( I <= IEND )
+ DO I = ISTART,IEND,ISKIP 
     write (filenum,'(I6.6)')I
     filein=trim(dum(12))//filenum//' ' 
     fileout=trim(dum(13))//filenum//' ' 
+    INQUIRE(file=trim(filein),exist=FILE_EXIST)
+    IF(.NOT.FILE_EXIST) THEN
+       print*, "File ",trim(filein)," does not exist. Skipping."
+       CYCLE
+    ENDIF
     print "(a,1x,a)", trim(filein), trim(fileout) 
     OPEN(UNIT=12, FILE=trim(filein),FORM='UNFORMATTED', STATUS="OLD")
     open(unit=13,file=trim(fileout))
@@ -142,13 +147,14 @@ program rstress
  close(12)
 
  DO j=-1, JMAX
-    r(j)=DBLE(j)*ROF3N
-    rhf(j) =(DBLE(j)*ROF3N)+(ROF3N/2.d0)
+    r(j)=DBLE(j)*dr
+    rhf(j) =(DBLE(j)*dr)+(dr/2.d0)
  ENDDO
 
  mtot   = mstar/(1.d0-tmassini)
  kconst = rdiskau*mtot**(0.333333333333333)/(r(JREQ)*7.93d-3)
  sconv = 2.24d48*mtot**(7.d0/3.d0)/kconst
+ rconv = rdiskau/r(JREQ)
 
  print *, " File read."
 
@@ -186,14 +192,13 @@ program rstress
  enddo
 
  do J=0,JMAX-1
-  write(13,'(7(1pe15.8,1x))') dr*( dble(J)+0.5d0 ),stress(J)*sconv+bg,ringmass(J),avphi(J)-&
+  write(13,'(8(1pe15.8,1x))') time/torp,rconv*dr*( dble(J)+0.5d0 ),stress(J)*sconv+bg,ringmass(J),avphi(J)-&
        vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)),avr(J)-vr(J,0,0)/rho(J,0,0),rho(J,0,0),&
        rho(J,0,0)*(avphi(J)-vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)))&
           *(avr(J)-vr(J,0,0)/rho(J,0,0))*dr*dr*dz*dphi*(dble(J)+0.5)
  enddo
 
 
- I = I+ISKIP
  enddo ! end while loop
 
 
