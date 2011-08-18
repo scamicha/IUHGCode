@@ -11,10 +11,11 @@ program rstress
 
  real(KIND=8), allocatable, dimension(:,:,:) :: rho,vr,vphi,vz,eps
  real(KIND=8), allocatable, dimension(:)::stress,ringmass,avr,avphi
+ real(KIND=8), allocatable, dimension(:)::r,rhf
 
  real(KIND=8) :: dz,dr,torp,sconv,avgvphi,avgvr,mass,elost,den,sound,ommax
  real(KIND=8) :: y1, y2, y3, y4, t, u, angle, dphi, pi, ir, jr, rr,time, bg
- real(KIND=8) :: tmassini,mstar,rdiskau,kconst
+ real(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot
  character :: filein*72, fileout*72,filenum*6,dum(13)*72
 
   CALL GetArg(1,dum(1))
@@ -116,6 +117,8 @@ program rstress
   allocate(ringmass(-1:JMAX))
   allocate(avphi(-1:JMAX))
   allocate(avr(-1:JMAX))
+  allocate(r(-1:JMAX))
+  allocate(rhf(-1:JMAX))
   
   mstar = 1.d0
   rdiskau = 40.d0
@@ -139,8 +142,8 @@ program rstress
  close(12)
 
  DO j=-1, JMAX
-    r(j)=(j)*ROF3N
-    rhf(j) =((j)*ROF3N)+(ROF3N/2)
+    r(j)=DBLE(j)*ROF3N
+    rhf(j) =(DBLE(j)*ROF3N)+(ROF3N/2.d0)
  ENDDO
 
  mtot   = mstar/(1.d0-tmassini)
