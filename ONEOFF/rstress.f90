@@ -167,18 +167,22 @@ program rstress
       mass=0d0
       avgvr=0d0
       avgvphi=0d0
-      do JS=J-JSH,J+JSH
-         avgvr=avgvr+vr(JS,K,L)*(dble(J)+0.5d0)! vr is momentum density
-         mass=mass+rho(JS,K,L)*(dble(J)+0.5d0)
-      enddo
-      avgvr=avgvr/mass
-      mass=0d0
-      do LS=L-LSH,L+LSH
-        LSL=LS
-        if(LS<0)LSL=LS+LMAX
-        if(LS>LMAX-1)LSL=LS-LMAX
-        avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
-        mass=mass+rho(J,K,LSL)
+      ! do JS=J-JSH,J+JSH
+      !    avgvr=avgvr+vr(JS,K,L)*(dble(J)+0.5d0)! vr is momentum density
+      !    mass=mass+rho(JS,K,L)*(dble(J)+0.5d0)
+      ! enddo
+      ! avgvr=avgvr/mass
+      ! mass=0d0
+      ! do LS=L-LSH,L+LSH
+      !   LSL=LS
+      !   if(LS<0)LSL=LS+LMAX
+      !   if(LS>LMAX-1)LSL=LS-LMAX
+      !   avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
+      !   mass=mass+rho(J,K,LSL)
+      ! enddo
+      do LS=0,LMAX-1
+         avgvphi = avgvphi+vphi(J,K,LS)
+         mass=mass+rho(J,K,LS)
       enddo
       avgvphi=avgvphi/( (dr*(dble(J)+0.5d0))  * mass )
       if(L==0.and.K==0)avphi(J)=avgvphi
