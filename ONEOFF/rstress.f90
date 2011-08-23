@@ -6,7 +6,7 @@ program rstress
 ! dx is zof3n
 !
  integer :: JMAX, KMAX, LMAX, YMAX, XMAX, JREQ
- integer :: ISTART, IEND, ISKIP,JS,LS,LSL,LSH=2,JSH=2
+ integer :: ISTART, IEND, ISKIP,JS,LS,LSL,LSH,JSH
  integer :: II, JJ, IRR, IAN, IAN2, I, L, J, K
 
  real(KIND=8), allocatable, dimension(:,:,:) :: rho,vr,vphi,vz,eps
@@ -121,6 +121,8 @@ program rstress
   allocate(r(-1:JMAX))
   allocate(rhf(-1:JMAX))
   
+  LSH   = LMAX/32
+  JSH   = 2
   mstar = 1.d0
   rdiskau = 40.d0
 
@@ -137,70 +139,70 @@ program rstress
     OPEN(UNIT=12, FILE=trim(filein),FORM='UNFORMATTED', STATUS="OLD")
     open(unit=13,file=trim(fileout))
 
- read(12)vr
- read(12)vz
- read(12)vphi
- read(12)rho
- read(12)eps
- READ(12)dr,dz,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
- read(12)tmassini
- close(12)
+    read(12)vr
+    read(12)vz
+    read(12)vphi
+    read(12)rho
+    read(12)eps
+    READ(12)dr,dz,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
+    read(12)tmassini
+    close(12)
 
- DO j=-1, JMAX
-    r(j)=DBLE(j)*dr
-    rhf(j) =(DBLE(j)*dr)+(dr/2.d0)
- ENDDO
+    DO j=-1, JMAX
+       r(j)=DBLE(j)*dr
+       rhf(j) =(DBLE(j)*dr)+(dr/2.d0)
+    ENDDO
 
- mtot   = mstar/(1.d0-tmassini)
- kconst = rdiskau*mtot**(0.333333333333333)/(r(JREQ)*7.93d-3)
- sconv = 2.24d48*mtot**(7.d0/3.d0)/kconst
- rconv = rdiskau/r(JREQ)
+    mtot   = mstar/(1.d0-tmassini)
+    kconst = rdiskau*mtot**(0.333333333333333)/(r(JREQ)*7.93d-3)
+    sconv = 2.24d48*mtot**(7.d0/3.d0)/kconst
+    rconv = rdiskau/r(JREQ)
 
- print *, " File read."
+    print *, " File read."
 
  
- stress=0d0;avphi=0d0;avr=0d0
- dphi=2d0*acos(-1d0)/dble(LMAX)
- do L = 0, LMAX-1
-  do K = 0, KMAX-1
-    do J = JSH, JMAX-JSH
-      mass=0d0
-      avgvr=0d0
-      avgvphi=0d0
-      ! do JS=J-JSH,J+JSH
-      !    avgvr=avgvr+vr(JS,K,L)*(dble(J)+0.5d0)! vr is momentum density
-      !    mass=mass+rho(JS,K,L)*(dble(J)+0.5d0)
-      ! enddo
-      ! avgvr=avgvr/mass
-      ! mass=0d0
-      ! do LS=L-LSH,L+LSH
-      !   LSL=LS
-      !   if(LS<0)LSL=LS+LMAX
-      !   if(LS>LMAX-1)LSL=LS-LMAX
-      !   avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
-      !   mass=mass+rho(J,K,LSL)
-      ! enddo
-      do LS=0,LMAX-1
-         avgvphi = avgvphi+vphi(J,K,LS)
-         mass=mass+rho(J,K,LS)
-      enddo
-      avgvphi=avgvphi/( (dr*(dble(J)+0.5d0))  * mass )
-      if(L==0.and.K==0)avphi(J)=avgvphi
-      if(L==0.and.K==0)avr(J)=avgvr 
-      stress(J)=stress(J)+ &
-         rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(dble(J)+0.5d0)*rho(J,K,L)))&
-                   *(avgvr-vr(J,K,L)/rho(J,K,L))*dz*dphi*2d0*(dr*(dble(J)+0.5d0))**2
-      ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(dble(J)+0.5d0)
+    stress=0d0;avphi=0d0;avr=0d0
+    dphi=2d0*acos(-1d0)/dble(LMAX)
+    do L = 0, LMAX-1
+       do K = 0, KMAX-1
+          do J = JSH, JMAX-JSH
+             mass=0d0
+             avgvr=0d0
+             avgvphi=0d0
+             do JS=J-JSH,J+JSH
+                avgvr=avgvr+vr(JS,K,L)*(dble(J)+0.5d0)! vr is momentum density
+                mass=mass+rho(JS,K,L)*(dble(J)+0.5d0)
+             enddo
+             avgvr=avgvr/mass
+             mass=0d0
+             do LS=L-LSH,L+LSH
+               LSL=LS
+               if(LS<0)LSL=LS+LMAX
+               if(LS>LMAX-1)LSL=LS-LMAX
+               avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
+               mass=mass+rho(J,K,LSL)
+             enddo
+             ! do LS=0,LMAX-1
+             !    avgvphi = avgvphi+vphi(J,K,LS)
+             !    mass=mass+rho(J,K,LS)
+             ! enddo
+             avgvphi=avgvphi/( (dr*(dble(J)+0.5d0))  * mass )
+             if(L==0.and.K==0)avphi(J)=avgvphi
+             if(L==0.and.K==0)avr(J)=avgvr 
+             stress(J)=stress(J)+ &
+                  rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(dble(J)+0.5d0)*rho(J,K,L)))&
+                  *(avgvr-vr(J,K,L)/rho(J,K,L))*dz*dphi*2d0*(dr*(dble(J)+0.5d0))**2
+             ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(dble(J)+0.5d0)
+          enddo
+       enddo
     enddo
-  enddo
- enddo
 
- do J=0,JMAX-1
-  write(13,'(8(1pe15.8,1x))') time/torp,rconv*dr*( dble(J)+0.5d0 ),stress(J)*sconv+bg,ringmass(J),avphi(J)-&
-       vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)),avr(J)-vr(J,0,0)/rho(J,0,0),rho(J,0,0),&
-       rho(J,0,0)*(avphi(J)-vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)))&
-          *(avr(J)-vr(J,0,0)/rho(J,0,0))*dr*dr*dz*dphi*(dble(J)+0.5)
- enddo
+    do J=0,JMAX-1
+       write(13,'(8(1pe15.8,1x))') time/torp,rconv*dr*( dble(J)+0.5d0 ),stress(J)*sconv+bg,ringmass(J),avphi(J)-&
+            vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)),avr(J)-vr(J,0,0)/rho(J,0,0),rho(J,0,0),&
+            rho(J,0,0)*(avphi(J)-vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)))&
+            *(avr(J)-vr(J,0,0)/rho(J,0,0))*dr*dr*dz*dphi*(dble(J)+0.5)
+    enddo
 
 
  enddo ! end while loop

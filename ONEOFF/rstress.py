@@ -3,7 +3,7 @@
 
 import numpy
 import matplotlib
-matplotlib.use('PS')
+#matplotlib.use('PS')
 import matplotlib.pyplot as plt
 import sys
 import os
@@ -20,22 +20,22 @@ def main(*args):
     istart.append(205000)
     iend.append(500000)
     iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_LMAX64.')
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_ring_LMAX64.')
     istart.append(110007)
     iend.append(385007)
     iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_LMAX128.')
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_ring_LMAX128.')
     istart.append(205000)
     iend.append(650000)
     iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_LMAX256.')
-    istart.append(205000)
-    iend.append(980000)
-    iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_LMAX512.')
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_ring_LMAX256.')
+    # istart.append(205000)
+    # iend.append(980000)
+    # iskip.append(5000)
+    # prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_LMAX512.')
 
     jmax    = 512
-    for k in range(4):
+    for k in range(3):
         radius  = []
         rstress = []
         count   = 0
@@ -56,11 +56,11 @@ def main(*args):
                 for line in f:
                     entries = line.split()
                     radius.append(float(entries[1]))
-                    rstress.append(abs(float(entries[2])))
+                    rstress.append(float(entries[2]))
             else:
                 for j,line in enumerate(f):
                     entries = line.split()
-                    rstress[j] += abs(float(entries[2]))
+                    rstress[j] += float(entries[2])
             
             i += iskip[k]
 
@@ -68,9 +68,9 @@ def main(*args):
             i /= count
         if k == 0:
             xmin = min(radius)
-            ymin = -0.1e39
+            ymin = -1.0e41
             xmax = max(radius)
-            ymax = max(rstress)
+            ymax = 1.0e41
             axay = [xmin,xmax,ymin,ymax]
             print axay
             plt.axis(axay)
@@ -79,7 +79,8 @@ def main(*args):
         del radius
         del rstress
 
-    plt.savefig('2cell_comp_abs.eps')
+#    plt.savefig('2cell_comp_abs.eps')
+    plt.show()
     
     return 0
 
