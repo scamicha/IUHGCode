@@ -172,7 +172,7 @@ PROGRAM rstress
              avgvr=0d0
              avgvphi=0d0
              DO JS=J-JSH,J+JSH
-                avgvr=avgvr+(0.5d0*(vr(JS,K,L)+vr(JS+1,K,L))/rho(JS,K,L)
+                avgvr=avgvr+(0.5d0*(vr(JS,K,L)+vr(JS+1,K,L)))/rho(JS,K,L)
              ENDDO
              avgvr=avgvr/AVGRNUM
              DO LS=L-LSH,L+LSH
@@ -188,7 +188,7 @@ PROGRAM rstress
 
              stress(J)=stress(J)+ &
                   rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
-                  *(avgvr-(0.5d0*(vr(J,K,L)+vr(J+1,K,L))/rho(J,K,L))*2d0
+                  *(avgvr-(0.5d0*(vr(J,K,L)+vr(J+1,K,L)))/rho(J,K,L))*2d0
 
              ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(DBLE(J)+0.5d0)
           ENDDO
