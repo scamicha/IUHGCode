@@ -169,39 +169,27 @@ PROGRAM rstress
     DO L = 0, LMAX-1
        DO K = 0, KMAX-1
           DO J = JSH+1, JMAX-JSH+1
-             mass=0d0
              avgvr=0d0
              avgvphi=0d0
              DO JS=J-JSH,J+JSH
-                ! avgvr=avgvr+vr(JS,K,L)*(DBLE(J)+0.5d0)! vr is momentum density
-                ! mass=mass+rho(JS,K,L)*(DBLE(J)+0.5d0)
-                avgvr=avgvr+vr(JS,K,L)/(0.5d0*(rho(JS,K,L)+rho(JS-1,K,L)))
+                avgvr=avgvr+(0.5d0*(vr(JS,K,L)+vr(JS+1,K,L))/rho(JS,K,L)
              ENDDO
-             ! avgvr=avgvr/mass
              avgvr=avgvr/AVGRNUM
-             mass=0d0
              DO LS=L-LSH,L+LSH
                LSL=LS
                IF(LS<0)LSL=LS+LMAX
                IF(LS>LMAX-1)LSL=LS-LMAX
-               ! avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
                avgvphi=avgvphi+vphi(J,K,LSL)/(rho(J,K,LSL)*dr*(DBLE(J)+0.5d0))
-               mass=mass+rho(J,K,LSL)
              ENDDO
              avgvphi = avgvphi/AVGPHINUM
-             ! do LS=0,LMAX-1
-             !    avgvphi = avgvphi+vphi(J,K,LS)
-             !    mass=mass+rho(J,K,LS)
-             ! enddo
-             ! avgvphi=avgvphi/( (dr*(DBLE(J)+0.5d0))  * mass )
+
              IF(L==0.AND.K==0)avphi(J)=avgvphi
              IF(L==0.AND.K==0)avr(J)=avgvr 
-             ! stress(J)=stress(J)+ &
-             !      rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
-             !      *(avgvr-vr(J,K,L)/rho(J,K,L))*dz*dphi*2d0*(dr*(DBLE(J)+0.5d0))**2
+
              stress(J)=stress(J)+ &
                   rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
-                  *(avgvr-vr(J,K,L)/rho(J,K,L))*2d0
+                  *(avgvr-(0.5d0*(vr(J,K,L)+vr(J+1,K,L))/rho(J,K,L))*2d0
+
              ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(DBLE(J)+0.5d0)
           ENDDO
        ENDDO
@@ -219,7 +207,4 @@ PROGRAM rstress
 
 
  STOP
-END
-  
-
-    
+END    
