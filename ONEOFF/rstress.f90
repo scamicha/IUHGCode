@@ -175,7 +175,7 @@ PROGRAM rstress
              DO JS=J-JSH,J+JSH
                 ! avgvr=avgvr+vr(JS,K,L)*(DBLE(J)+0.5d0)! vr is momentum density
                 ! mass=mass+rho(JS,K,L)*(DBLE(J)+0.5d0)
-                avgvr=avgvr+vr(JS,K,L)/(0.5d0*(rho(JS,K,L)+rho(JS-1,K,L)))
+                avgvr=avgvr+(0.5d0*(vr(JS,K,L)+vr(JS+1,K,L))/rho(JS,K,L)
              ENDDO
              ! avgvr=avgvr/mass
              avgvr=avgvr/AVGRNUM
@@ -201,7 +201,7 @@ PROGRAM rstress
              !      *(avgvr-vr(J,K,L)/rho(J,K,L))*dz*dphi*2d0*(dr*(DBLE(J)+0.5d0))**2
              stress(J)=stress(J)+ &
                   rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
-                  *(avgvr-vr(J,K,L)/rho(J,K,L))*2d0
+                  *(avgvr-(0.5d0*(vr(J,K,L)+vr(J+1,K,L))/rho(J,K,L))*2d0
              ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(DBLE(J)+0.5d0)
           ENDDO
        ENDDO
@@ -219,7 +219,4 @@ PROGRAM rstress
 
 
  STOP
-END
-  
-
-    
+END    
