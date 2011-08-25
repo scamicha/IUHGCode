@@ -1,22 +1,23 @@
 ! calculates the Reynold's stress
-program rstress
- implicit none
+PROGRAM rstress
+ IMPLICIT NONE
 !
 ! creating the map.  dr converts from cells to AU.
 ! dx is zof3n
 !
- integer :: JMAX, KMAX, LMAX, YMAX, XMAX, JREQ
- integer :: ISTART, IEND, ISKIP,JS,LS,LSL,LSH,JSH
- integer :: II, JJ, IRR, IAN, IAN2, I, L, J, K
+ INTEGER :: JMAX, KMAX, LMAX, YMAX, XMAX, JREQ
+ INTEGER :: ISTART, IEND, ISKIP,JS,LS,LSL,LSH,JSH
+ INTEGER :: II, JJ, IRR, IAN, IAN2, I, L, J, K
+ INTEGER :: AVGRNUM,AVGPHINUM
 
- real(KIND=8), allocatable, dimension(:,:,:) :: rho,vr,vphi,vz,eps
- real(KIND=8), allocatable, dimension(:)::stress,ringmass,avr,avphi
- real(KIND=8), allocatable, dimension(:)::r,rhf
+ REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:,:) :: rho,vr,vphi,vz,eps
+ REAL(KIND=8), ALLOCATABLE, DIMENSION(:)::stress,ringmass,avr,avphi
+ REAL(KIND=8), ALLOCATABLE, DIMENSION(:)::r,rhf
 
- real(KIND=8) :: dz,dr,torp,sconv,avgvphi,avgvr,mass,elost,den,sound,ommax
- real(KIND=8) :: y1, y2, y3, y4, t, u, angle, dphi, pi, ir, jr, rr,time, bg
- real(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot,rconv
- character :: filein*72, fileout*72,filenum*6,dum(13)*72
+ REAL(KIND=8) :: dz,dr,torp,sconv,avgvphi,avgvr,mass,elost,den,sound,ommax
+ REAL(KIND=8) :: y1, y2, y3, y4, t, u, angle, dphi, pi, ir, jr, rr,time, bg
+ REAL(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot,rconv
+ CHARACTER :: filein*72, fileout*72,filenum*6,dum(13)*72
  LOGICAL :: FILE_EXIST
 
   CALL GetArg(1,dum(1))
@@ -33,120 +34,122 @@ program rstress
   CALL GetArg(12,dum(12))
   CALL GetArg(13,dum(13))
 
-  if ( len(trim(dum(1))) == 0 .or. &
-       len(trim(dum(2))) == 0 .or. &
-       len(trim(dum(3))) == 0 .or. &
-       len(trim(dum(4))) == 0 .or. &
-       len(trim(dum(5))) == 0 .or. &
-       len(trim(dum(6))) == 0 .or. &
-       len(trim(dum(7))) == 0 .or. &
-       len(trim(dum(8))) == 0 .or. &
-       len(trim(dum(9))) == 0 .or. &
-       len(trim(dum(10)))== 0 .or. &
-       len(trim(dum(11)))== 0 .or. &
-       len(trim(dum(12)))== 0 .or. &
-       len(trim(dum(13)))== 0        ) then
-    print *, "A CHYMTOOL SPONSORED EVENT"
-    print *, " "
-    print *, " "
-    print *, "rstress v 1. 17.06.2011. A. C. Boley"
-    print *, " "
-    print *, " "
-    print *, "TORQUE USAGE: rstress {stepbegin} {stepend} {stepskip}"
-    print *, "                       {jmax} {kmax} {lmax} {torp (not used at the moment)} {dz}"
-    print *, "                       {cell-to-size unit conversion  }"
-    print *, "                       {constant torque (usually just set to 0.)}"
-    print *, "                       {code to cgs torque conversion}"
-    print *, "                       {filein prefix} {fileout prefix}" 
-    print *, " "
-    print *, " "
-    print *, "Calling Cthulu...(run)"
-    stop
-  endif
+  IF ( LEN(TRIM(dum(1))) == 0 .OR. &
+       LEN(TRIM(dum(2))) == 0 .OR. &
+       LEN(TRIM(dum(3))) == 0 .OR. &
+       LEN(TRIM(dum(4))) == 0 .OR. &
+       LEN(TRIM(dum(5))) == 0 .OR. &
+       LEN(TRIM(dum(6))) == 0 .OR. &
+       LEN(TRIM(dum(7))) == 0 .OR. &
+       LEN(TRIM(dum(8))) == 0 .OR. &
+       LEN(TRIM(dum(9))) == 0 .OR. &
+       LEN(TRIM(dum(10)))== 0 .OR. &
+       LEN(TRIM(dum(11)))== 0 .OR. &
+       LEN(TRIM(dum(12)))== 0 .OR. &
+       LEN(TRIM(dum(13)))== 0        ) THEN
+    PRINT *, "A CHYMTOOL SPONSORED EVENT"
+    PRINT *, " "
+    PRINT *, " "
+    PRINT *, "rstress v 1. 17.06.2011. A. C. Boley"
+    PRINT *, " "
+    PRINT *, " "
+    PRINT *, "TORQUE USAGE: rstress {stepbegin} {stepend} {stepskip}"
+    PRINT *, "                       {jmax} {kmax} {lmax} {torp (not used at the moment)} {dz}"
+    PRINT *, "                       {cell-to-size unit conversion  }"
+    PRINT *, "                       {constant torque (usually just set to 0.)}"
+    PRINT *, "                       {code to cgs torque conversion}"
+    PRINT *, "                       {filein prefix} {fileout prefix}" 
+    PRINT *, " "
+    PRINT *, " "
+    PRINT *, "Calling Cthulu...(run)"
+    STOP
+  ENDIF
 
-  print *, "A CHYMTOOL SPONSORED EVENT"
-  print *, " "
-  print *, " "
-  print *, "rstress v 1. 17.06.2011. A. C. Boley"
-  print *, " "
-  print *, " "
+  PRINT *, "A CHYMTOOL SPONSORED EVENT"
+  PRINT *, " "
+  PRINT *, " "
+  PRINT *, "rstress v 1. 17.06.2011. A. C. Boley"
+  PRINT *, " "
+  PRINT *, " "
  
-  dum(1) = trim(dum(1)) 
-  dum(2) = trim(dum(2)) 
-  dum(3) = trim(dum(3)) 
-  dum(4) = trim(dum(4)) 
-  dum(5) = trim(dum(5)) 
-  dum(6) = trim(dum(6)) 
-  dum(7) = trim(dum(7)) 
-  dum(8) = trim(dum(8)) 
-  dum(9) = trim(dum(9)) 
-  dum(10) = trim(dum(10)) 
-  dum(11) = trim(dum(11)) 
+  dum(1) = TRIM(dum(1)) 
+  dum(2) = TRIM(dum(2)) 
+  dum(3) = TRIM(dum(3)) 
+  dum(4) = TRIM(dum(4)) 
+  dum(5) = TRIM(dum(5)) 
+  dum(6) = TRIM(dum(6)) 
+  dum(7) = TRIM(dum(7)) 
+  dum(8) = TRIM(dum(8)) 
+  dum(9) = TRIM(dum(9)) 
+  dum(10) = TRIM(dum(10)) 
+  dum(11) = TRIM(dum(11)) 
 
-  read(dum(1),"(i8)")ISTART
-  read(dum(2),"(i8)")IEND
-  read(dum(3),"(i8)")ISKIP
-  read(dum(4),"(i8)")JMAX
-  read(dum(5),"(i8)")KMAX
-  read(dum(6),"(i8)")LMAX
-  read(dum(7),"(f15.8)")torp
-  read(dum(8),"(f15.8)")dz
-  read(dum(9),"(f15.8)")dr
-  read(dum(10),"(f15.8)")bg
-  read(dum(11),"(f15.8)")sconv
+  READ(dum(1),"(i8)")ISTART
+  READ(dum(2),"(i8)")IEND
+  READ(dum(3),"(i8)")ISKIP
+  READ(dum(4),"(i8)")JMAX
+  READ(dum(5),"(i8)")KMAX
+  READ(dum(6),"(i8)")LMAX
+  READ(dum(7),"(f15.8)")torp
+  READ(dum(8),"(f15.8)")dz
+  READ(dum(9),"(f15.8)")dr
+  READ(dum(10),"(f15.8)")bg
+  READ(dum(11),"(f15.8)")sconv
 
-  print *, " TORQUE OUT: ISTART -> ", ISTART
-  print *, " TORQUE OUT: IEND -> ", IEND
-  print *, " TORQUE OUT: ISKIP -> ", ISKIP
-  print *, " TORQUE OUT: JMAX -> ", JMAX
-  print *, " TORQUE OUT: KMAX -> ", KMAX
-  print *, " TORQUE OUT: LMAX -> ", LMAX
-  print *, " TORQUE OUT: torp -> ", torp
-  print *, " TORQUE OUT: dz -> ", dz
-  print *, " TORQUE OUT: dr conversion -> ", dr
-  print *, " TORQUE OUT: background -> ", bg
-  print *, " TORQUE OUT: torque conversion -> ", sconv
-  print *, " TORQUE OUT: filein prefix -> ", trim(dum(12))
-  print *, " TORQUE OUT: fileout prefix-> ", trim(dum(13))
+  PRINT *, " TORQUE OUT: ISTART -> ", ISTART
+  PRINT *, " TORQUE OUT: IEND -> ", IEND
+  PRINT *, " TORQUE OUT: ISKIP -> ", ISKIP
+  PRINT *, " TORQUE OUT: JMAX -> ", JMAX
+  PRINT *, " TORQUE OUT: KMAX -> ", KMAX
+  PRINT *, " TORQUE OUT: LMAX -> ", LMAX
+  PRINT *, " TORQUE OUT: torp -> ", torp
+  PRINT *, " TORQUE OUT: dz -> ", dz
+  PRINT *, " TORQUE OUT: dr conversion -> ", dr
+  PRINT *, " TORQUE OUT: background -> ", bg
+  PRINT *, " TORQUE OUT: torque conversion -> ", sconv
+  PRINT *, " TORQUE OUT: filein prefix -> ", TRIM(dum(12))
+  PRINT *, " TORQUE OUT: fileout prefix-> ", TRIM(dum(13))
 
-  allocate(rho(-1:JMAX,-1:KMAX,0:LMAX-1))
-  allocate(vr(-1:JMAX,-1:KMAX,0:LMAX-1))
-  allocate(vphi(-1:JMAX,-1:KMAX,0:LMAX-1))
-  allocate(vz(-1:JMAX,-1:KMAX,0:LMAX-1))
-  allocate(eps(-1:JMAX,-1:KMAX,0:LMAX-1))
-  allocate(stress(-1:JMAX))
-  allocate(ringmass(-1:JMAX))
-  allocate(avphi(-1:JMAX))
-  allocate(avr(-1:JMAX))
-  allocate(r(-1:JMAX))
-  allocate(rhf(-1:JMAX))
+  ALLOCATE(rho(-1:JMAX,-1:KMAX,0:LMAX-1))
+  ALLOCATE(vr(-1:JMAX,-1:KMAX,0:LMAX-1))
+  ALLOCATE(vphi(-1:JMAX,-1:KMAX,0:LMAX-1))
+  ALLOCATE(vz(-1:JMAX,-1:KMAX,0:LMAX-1))
+  ALLOCATE(eps(-1:JMAX,-1:KMAX,0:LMAX-1))
+  ALLOCATE(stress(-1:JMAX))
+  ALLOCATE(ringmass(-1:JMAX))
+  ALLOCATE(avphi(-1:JMAX))
+  ALLOCATE(avr(-1:JMAX))
+  ALLOCATE(r(-1:JMAX))
+  ALLOCATE(rhf(-1:JMAX))
   
-  LSH   = LMAX/32
+  LSH   = 2
   JSH   = 2
+  AVGRNUM = 2*JSH+1
+  AVGPHINUM = 2*LSH+1
   mstar = 1.d0
   rdiskau = 40.d0
 
  DO I = ISTART,IEND,ISKIP 
-    write (filenum,'(I6.6)')I
-    filein=trim(dum(12))//filenum//' ' 
-    fileout=trim(dum(13))//filenum//' ' 
-    INQUIRE(file=trim(filein),exist=FILE_EXIST)
+    WRITE (filenum,'(I6.6)')I
+    filein=TRIM(dum(12))//filenum//' ' 
+    fileout=TRIM(dum(13))//filenum//' ' 
+    INQUIRE(file=TRIM(filein),exist=FILE_EXIST)
     IF(.NOT.FILE_EXIST) THEN
-       print*, "File ",trim(filein)," does not exist. Skipping."
+       PRINT*, "File ",TRIM(filein)," does not exist. Skipping."
        CYCLE
     ENDIF
-    print "(a,1x,a)", trim(filein), trim(fileout) 
-    OPEN(UNIT=12, FILE=trim(filein),FORM='UNFORMATTED', STATUS="OLD")
-    open(unit=13,file=trim(fileout))
+    PRINT "(a,1x,a)", TRIM(filein), TRIM(fileout) 
+    OPEN(UNIT=12, FILE=TRIM(filein),FORM='UNFORMATTED', STATUS="OLD")
+    OPEN(unit=13,file=TRIM(fileout))
 
-    read(12)vr
-    read(12)vz
-    read(12)vphi
-    read(12)rho
-    read(12)eps
+    READ(12)vr
+    READ(12)vz
+    READ(12)vphi
+    READ(12)rho
+    READ(12)eps
     READ(12)dr,dz,DELT,TIME,ELOST,DEN,SOUND,JREQ,OMMAX
-    read(12)tmassini
-    close(12)
+    READ(12)tmassini
+    CLOSE(12)
 
     DO j=-1, JMAX
        r(j)=DBLE(j)*dr
@@ -158,58 +161,65 @@ program rstress
     sconv = 2.24d48*mtot**(7.d0/3.d0)/kconst
     rconv = rdiskau/r(JREQ)
 
-    print *, " File read."
+    PRINT *, " File read."
 
  
     stress=0d0;avphi=0d0;avr=0d0
-    dphi=2d0*acos(-1d0)/dble(LMAX)
-    do L = 0, LMAX-1
-       do K = 0, KMAX-1
-          do J = JSH, JMAX-JSH
+    dphi=2d0*ACOS(-1d0)/DBLE(LMAX)
+    DO L = 0, LMAX-1
+       DO K = 0, KMAX-1
+          DO J = JSH+1, JMAX-JSH+1
              mass=0d0
              avgvr=0d0
              avgvphi=0d0
-             do JS=J-JSH,J+JSH
-                avgvr=avgvr+vr(JS,K,L)*(dble(J)+0.5d0)! vr is momentum density
-                mass=mass+rho(JS,K,L)*(dble(J)+0.5d0)
-             enddo
-             avgvr=avgvr/mass
+             DO JS=J-JSH,J+JSH
+                ! avgvr=avgvr+vr(JS,K,L)*(DBLE(J)+0.5d0)! vr is momentum density
+                ! mass=mass+rho(JS,K,L)*(DBLE(J)+0.5d0)
+                avgvr=avgvr+vr(JS,K,L)/(0.5d0*(rho(JS,K,L)+rho(JS-1,K,L)))
+             ENDDO
+             ! avgvr=avgvr/mass
+             avgvr=avgvr/AVGRNUM
              mass=0d0
-             do LS=L-LSH,L+LSH
+             DO LS=L-LSH,L+LSH
                LSL=LS
-               if(LS<0)LSL=LS+LMAX
-               if(LS>LMAX-1)LSL=LS-LMAX
-               avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
+               IF(LS<0)LSL=LS+LMAX
+               IF(LS>LMAX-1)LSL=LS-LMAX
+               ! avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
+               avgvphi=avgvphi+vhpi(J,K,LSL)/(rho(J,K,LSL)*dr*(DBLE(J)+0.5d0))
                mass=mass+rho(J,K,LSL)
-             enddo
+             ENDDO
+             avgvphi = avgvphi/AVGPHINUM
              ! do LS=0,LMAX-1
              !    avgvphi = avgvphi+vphi(J,K,LS)
              !    mass=mass+rho(J,K,LS)
              ! enddo
-             avgvphi=avgvphi/( (dr*(dble(J)+0.5d0))  * mass )
-             if(L==0.and.K==0)avphi(J)=avgvphi
-             if(L==0.and.K==0)avr(J)=avgvr 
+             ! avgvphi=avgvphi/( (dr*(DBLE(J)+0.5d0))  * mass )
+             IF(L==0.AND.K==0)avphi(J)=avgvphi
+             IF(L==0.AND.K==0)avr(J)=avgvr 
+             ! stress(J)=stress(J)+ &
+             !      rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
+             !      *(avgvr-vr(J,K,L)/rho(J,K,L))*dz*dphi*2d0*(dr*(DBLE(J)+0.5d0))**2
              stress(J)=stress(J)+ &
-                  rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(dble(J)+0.5d0)*rho(J,K,L)))&
-                  *(avgvr-vr(J,K,L)/rho(J,K,L))*dz*dphi*2d0*(dr*(dble(J)+0.5d0))**2
-             ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(dble(J)+0.5d0)
-          enddo
-       enddo
-    enddo
+                  rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
+                  *(avgvr-vr(J,K,L)/rho(J,K,L))*2d0
+             ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(DBLE(J)+0.5d0)
+          ENDDO
+       ENDDO
+    ENDDO
 
-    do J=0,JMAX-1
-       write(13,'(8(1pe15.8,1x))') time/torp,rconv*dr*( dble(J)+0.5d0 ),stress(J)*sconv+bg,ringmass(J),avphi(J)-&
-            vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)),avr(J)-vr(J,0,0)/rho(J,0,0),rho(J,0,0),&
-            rho(J,0,0)*(avphi(J)-vphi(J,0,0)/(dr*(dble(J)+0.5)*rho(J,0,0)))&
-            *(avr(J)-vr(J,0,0)/rho(J,0,0))*dr*dr*dz*dphi*(dble(J)+0.5)
-    enddo
-
-
- enddo ! end while loop
+    DO J=0,JMAX-1
+       WRITE(13,'(8(1pe15.8,1x))') time/torp,rconv*dr*( DBLE(J)+0.5d0 ),stress(J)*sconv+bg,ringmass(J),avphi(J)-&
+            vphi(J,0,0)/(dr*(DBLE(J)+0.5)*rho(J,0,0)),avr(J)-vr(J,0,0)/rho(J,0,0),rho(J,0,0),&
+            rho(J,0,0)*(avphi(J)-vphi(J,0,0)/(dr*(DBLE(J)+0.5)*rho(J,0,0)))&
+            *(avr(J)-vr(J,0,0)/rho(J,0,0))*dr*dr*dz*dphi*(DBLE(J)+0.5)
+    ENDDO
 
 
- stop
-end
+ ENDDO ! end while loop
+
+
+ STOP
+END
   
 
     
