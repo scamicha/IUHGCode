@@ -122,7 +122,7 @@ PROGRAM rstress
   ALLOCATE(r(-1:JMAX))
   ALLOCATE(rhf(-1:JMAX))
   
-  LSH   = 2
+  LSH   = LMAX/32
   JSH   = 2
   AVGRNUM = 2*JSH+1
   AVGPHINUM = 2*LSH+1
@@ -185,7 +185,7 @@ PROGRAM rstress
                IF(LS<0)LSL=LS+LMAX
                IF(LS>LMAX-1)LSL=LS-LMAX
                ! avgvphi=avgvphi+vphi(J,K,LSL) ! vphi is angular momentum density
-               avgvphi=avgvphi+vhpi(J,K,LSL)/(rho(J,K,LSL)*dr*(DBLE(J)+0.5d0))
+               avgvphi=avgvphi+vphi(J,K,LSL)/(rho(J,K,LSL)*dr*(DBLE(J)+0.5d0))
                mass=mass+rho(J,K,LSL)
              ENDDO
              avgvphi = avgvphi/AVGPHINUM
