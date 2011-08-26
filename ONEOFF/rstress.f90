@@ -122,7 +122,7 @@ PROGRAM rstress
   ALLOCATE(r(-1:JMAX))
   ALLOCATE(rhf(-1:JMAX))
   
-  LSH   = 2
+  LSH   = LMAX/32
   JSH   = 2
   AVGRNUM = 2*JSH+1
   AVGPHINUM = 2*LSH+1
