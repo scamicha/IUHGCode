@@ -16,7 +16,7 @@ PROGRAM rstress
 
  REAL(KIND=8) :: dz,dr,torp,sconv,avgvphi,avgvr,mass,elost,den,sound,ommax
  REAL(KIND=8) :: y1, y2, y3, y4, t, u, angle, dphi, pi, ir, jr, rr,time, bg
- REAL(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot,rconv
+ REAL(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot,rconv,vcent
  CHARACTER :: filein*72, fileout*72,filenum*6,dum(13)*72
  LOGICAL :: FILE_EXIST
 
@@ -172,23 +172,27 @@ PROGRAM rstress
              avgvr=0d0
              avgvphi=0d0
              DO JS=J-JSH,J+JSH
-                avgvr=avgvr+(0.5d0*(vr(JS,K,L)+vr(JS+1,K,L))/rho(JS,K,L)
+                DO LS=L-LSH,L+LSH
+                   vcent = (vr(JS,K,LS)/(rho(JS-1,K,LS)+rho(JS,K,LS)))+  &
+                        (vr(JS+1,K,LS)/(rho(JS,K,LS)+rho(JS+1,K,LS)))
+                   avgvr=avgvr+vcent
+                   LSL=LS
+                   IF(LS<0)LSL=LS+LMAX
+                   IF(LS>LMAX-1)LSL=LS-LMAX
+                   avgvphi=avgvphi+vhpi(JS,K,LSL)/(rho(JS,K,LSL)*dr*(DBLE(J)+0.5d0))
+                ENDDO
              ENDDO
-             avgvr=avgvr/AVGRNUM
-             DO LS=L-LSH,L+LSH
-               LSL=LS
-               IF(LS<0)LSL=LS+LMAX
-               IF(LS>LMAX-1)LSL=LS-LMAX
-               avgvphi=avgvphi+vhpi(J,K,LSL)/(rho(J,K,LSL)*dr*(DBLE(J)+0.5d0))
-             ENDDO
-             avgvphi = avgvphi/AVGPHINUM
+             avgvr=avgvr/(AVGRNUM*AVGPHINUM)
+             avgvphi = avgvphi/(AVGRNUM*AVGPHINUM)
 
              IF(L==0.AND.K==0)avphi(J)=avgvphi
              IF(L==0.AND.K==0)avr(J)=avgvr 
 
+             vcent=(vr(J,K,L)/(rho(J-1,K,L)+rho(J,K,L)))+  &
+                        (vr(J+1,K,L)/(rho(J,K,L)+rho(J+1,K,L)))
              stress(J)=stress(J)+ &
                   rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
-                  *(avgvr-(0.5d0*(vr(J,K,L)+vr(J+1,K,L))/rho(J,K,L))*2d0
+                  *(avgvr-vcent)*2d0
 
              ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(DBLE(J)+0.5d0)
           ENDDO
