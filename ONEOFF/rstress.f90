@@ -179,7 +179,7 @@ PROGRAM rstress
                    LSL=LS
                    IF(LS<0)LSL=LS+LMAX
                    IF(LS>LMAX-1)LSL=LS-LMAX
-                   avgvphi=avgvphi+vhpi(JS,K,LSL)/(rho(JS,K,LSL)*dr*(DBLE(J)+0.5d0))
+                   avgvphi=avgvphi+vphi(JS,K,LSL)/(rho(JS,K,LSL)*dr*(DBLE(J)+0.5d0))
                 ENDDO
              ENDDO
              avgvr=avgvr/(AVGRNUM*AVGPHINUM)
