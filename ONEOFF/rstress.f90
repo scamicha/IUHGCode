@@ -17,6 +17,7 @@ PROGRAM rstress
  REAL(KIND=8) :: dz,dr,torp,sconv,avgvphi,avgvr,mass,elost,den,sound,ommax
  REAL(KIND=8) :: y1, y2, y3, y4, t, u, angle, dphi, pi, ir, jr, rr,time, bg
  REAL(KIND=8) :: tmassini,mstar,rdiskau,kconst,delt,mtot,rconv,vcent
+ REAL(KIND=8), PARAMETER :: pi = 3.14159265358979323846
  CHARACTER :: filein*72, fileout*72,filenum*6,dum(13)*72
  LOGICAL :: FILE_EXIST
 
@@ -192,7 +193,7 @@ PROGRAM rstress
                         (vr(J+1,K,L)/(rho(J,K,L)+rho(J+1,K,L)))
              stress(J)=stress(J)+ &
                   rho(J,K,L)*(avgvphi-vphi(J,K,L)/(dr*(DBLE(J)+0.5d0)*rho(J,K,L)))&
-                  *(avgvr-vcent)*2d0
+                  *(avgvr-vcent)*4d0*pi*dz*rhf(j)**2
 
              ringmass(J)=ringmass(J)+rho(J,K,L)*dphi*dr*dz*dr*(DBLE(J)+0.5d0)
           ENDDO
