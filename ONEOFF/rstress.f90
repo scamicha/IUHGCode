@@ -169,18 +169,19 @@ PROGRAM rstress
     dphi=2d0*ACOS(-1d0)/DBLE(LMAX)
     DO L = 0, LMAX-1
        DO K = 0, KMAX-1
-          DO J = JSH+1, JMAX-JSH+1
+          DO J = JSH, JMAX-JSH-1
              avgvr=0d0
              avgvphi=0d0
              DO JS=J-JSH,J+JSH
                 DO LS=L-LSH,L+LSH
-                   vcent = (vr(JS,K,LS)/(rho(JS-1,K,LS)+rho(JS,K,LS)))+  &
-                        (vr(JS+1,K,LS)/(rho(JS,K,LS)+rho(JS+1,K,LS)))
-                   avgvr=avgvr+vcent
                    LSL=LS
                    IF(LS<0)LSL=LS+LMAX
                    IF(LS>LMAX-1)LSL=LS-LMAX
-                   avgvphi=avgvphi+vhpi(JS,K,LSL)/(rho(JS,K,LSL)*dr*(DBLE(J)+0.5d0))
+                   vcent = (vr(JS,K,LSL)/(rho(JS-1,K,LSL)+rho(JS,K,LSL)))+  &
+                        (vr(JS+1,K,LSL)/(rho(JS,K,LSL)+rho(JS+1,K,LSL)))
+                   avgvr=avgvr+vcent
+                   
+                   avgvphi=avgvphi+vphi(JS,K,LSL)/(rho(JS,K,LSL)*dr*(DBLE(J)+0.5d0))
                 ENDDO
              ENDDO
              avgvr=avgvr/(AVGRNUM*AVGPHINUM)
