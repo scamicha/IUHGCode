@@ -1017,7 +1017,7 @@ C...Diagnostic Information for COM and M=1 power...
             if (jmin.gt.2) write(8) tmassini,tmass,tmassadd,tmassout
      &        ,tmassacc,totcool,totdflux,totheat,totirr,etotfl,eflufftot
             if (planet) write(8) planetx,planety,planetvx,planetvy
-            close(8
+            close(8)
 
 !$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(k,j,l)
             do l=1,lmax
