@@ -1027,7 +1027,7 @@ C...Diagnostic Information for COM and M=1 power...
                   enddo
                enddo
             enddo
-!$OMP END PARALLEL DO)
+!$OMP END PARALLEL DO
 
             epsfull=trim(outpath)//'coolheat_full.'//index
             open(unit=29,file=epsfull,form='unformatted')
