@@ -143,7 +143,7 @@ housekeeping.o: housekeeping.f
 	$(COMPILE) $(MP) $(CFLAGS)  -c $<
 
 io.o: io.f
-	$(COMPILE) $(MP) $(CFLAGS)  -c $<
+	$(COMPILE) $(CFLAGS)  -c $<
 
 misc.o: misc.f
 	$(COMPILE) $(MP) $(CFLAGS)  -c $<
