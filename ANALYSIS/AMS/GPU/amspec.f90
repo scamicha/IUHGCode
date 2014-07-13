@@ -5,6 +5,7 @@
       INTEGER,PARAMETER :: DOUBLE = SELECTED_REAL_KIND(15,300)
       INTEGER :: jmax,kmax,lmax
       INTEGER :: start,finish,skip,size,jstart
+      INTEGER :: c1,c2,cr,cm   ! Timing variables
 
       INTEGER :: jmax2,kmax2,mmax
       INTEGER :: count,j,k,l,m,i,numargs
@@ -30,6 +31,9 @@
          print*,"Incorrect number of arguments"
          STOP
       ENDIF
+
+      call system_clock(c1,cr,cm)
+      print "System Clock: ", c1, ", ",cr,", ",cm
       
       call getarg(1,jmaxin)
       call getarg(2,kmaxin)
@@ -92,8 +96,7 @@
          timearr(count) = time/tconv
          
 
-!$OMP PARALLEL DO DEFAULT(SHARED)  &
-!$OMP PRIVATE(am,bm,a0,avgaslice,ambmslice,phi,j,k,l)
+!$ACC PARALLEL
 
          DO m=1,MMAX
             ALLOCATE(a0(jmax2,kmax2))
@@ -135,7 +138,7 @@
             DEALLOCATE(ambmslice)
             DEALLOCATE(avgaslice)
          ENDDO
-!$OMP END PARALLEL DO
+!$ACC END PARALLEL
       ENDDO
 
       avgamid(:,:) = avgamid(:,:)*2.d0/a0mid(:,:)
