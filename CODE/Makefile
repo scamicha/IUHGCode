@@ -25,9 +25,9 @@ ifeq ($(COMPILE),intel)
 override define COMPILE
 ifort
 endef
-TARCH  = -r8 -mtune=itanium2 -mcmodel=medium -convert little_endian 
-CARCH  = -mtune=itanium2 -mcmodel=medium
-F95OPT = -O3 -pad -align all -nocheck -fast -shared-intel 
+TARCH  = -r8 -mcmodel=medium -convert little_endian 
+CARCH  = -mcmodel=medium
+F95OPT = -ipo -O3 -no-prec-div -fp-model fast=2 -xHost -shared-intel 
 FIXED  = -fixed
 FREE   = -free
 INLINE = -ip
