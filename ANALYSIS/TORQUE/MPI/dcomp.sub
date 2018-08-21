@@ -1,10 +1,10 @@
 #!/bin/bash
-#A sample job submission script using PBS on Quarry at IU
+#A sample job submission script using PBS on Karst at IU
 #be sure to set nodes and ppn to match the OMP_NUM_THREADS set
 #in launch.sh. Will run out of the directory the job was submitted from.
 # -N sets the name of the run.
 
-#PBS -l nodes=8:ppn=8,walltime=10:30:00
+#PBS -l nodes=8:ppn=16,walltime=10:30:00
 #PBS -N L512_decomp_MPI
 #PBS -q pg
 #PBS -j oe
@@ -30,7 +30,7 @@ while [ $COUNTER -lt $NUM_RANKS ]
   done
 
 sort hostfile.new > hostfile
-NP=`wc -l ./hostfile | awk '{print $1}'` 
+NP=`wc -l ./hostfile | awk '{print $1}'`
 
 mpirun -machinefile hostfile -np $NP ./launch.sh
 rm -f hostfile hostfile.new
