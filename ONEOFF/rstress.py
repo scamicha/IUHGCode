@@ -3,7 +3,7 @@
 
 import numpy
 import matplotlib
-#matplotlib.use('PS')
+matplotlib.use('PS')
 import matplotlib.pyplot as plt
 import sys
 import os
@@ -17,25 +17,26 @@ def main(*args):
     iend   = []
     iskip  = []
     prefix = []
+    pi = 3.14159265358979323846
     istart.append(205000)
     iend.append(500000)
     iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_ring_LMAX64.')
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_patches_LMAX64.')
     istart.append(110007)
     iend.append(385007)
     iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_ring_LMAX128.')
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_patches_LMAX128.')
     istart.append(205000)
     iend.append(650000)
     iskip.append(5000)
-    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_ring_LMAX256.')
-    # istart.append(205000)
-    # iend.append(980000)
-    # iskip.append(5000)
-    # prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_LMAX512.')
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_patches_LMAX256.')
+    istart.append(205000)
+    iend.append(980000)
+    iskip.append(5000)
+    prefix.append('/Users/scamicha/Research/Data/INITCOND/RES_STUDY/RSTRESS/rs_2cell_patches_LMAX512.')
 
     jmax    = 512
-    for k in range(3):
+    for k in range(4):
         radius  = []
         rstress = []
         count   = 0
@@ -56,21 +57,23 @@ def main(*args):
                 for line in f:
                     entries = line.split()
                     radius.append(float(entries[1]))
-                    rstress.append(float(entries[2]))
+                    rstress.append(abs(float(entries[2])))
             else:
                 for j,line in enumerate(f):
                     entries = line.split()
-                    rstress[j] += float(entries[2])
+                    rstress[j] += abs(float(entries[2]))
             
             i += iskip[k]
+        dz = radius[1]-radius[0]
 
-        for i in rstress:
-            i /= count
+        for i,value in enumerate(rstress):
+            rstress[i] = value*2.0*pi*dz*pow(radius[i],2.0)/(count*64*(k+1))
+        
         if k == 0:
-            xmin = min(radius)
-            ymin = -1.0e41
-            xmax = max(radius)
-            ymax = 1.0e41
+            xmin = 10.0
+            ymin = 0.0
+            xmax = 50.0
+            ymax = 7.0e38u
             axay = [xmin,xmax,ymin,ymax]
             print axay
             plt.axis(axay)
@@ -79,8 +82,8 @@ def main(*args):
         del radius
         del rstress
 
-#    plt.savefig('2cell_comp_abs.eps')
-    plt.show()
+    plt.savefig('2cell_patches_comp_abs.eps')
+#    plt.show()
     
     return 0
 
